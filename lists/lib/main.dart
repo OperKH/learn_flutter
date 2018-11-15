@@ -10,13 +10,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
         primarySwatch: Colors.deepOrange,
-        accentColor: Colors.deepPurple
+        accentColor: Colors.deepPurple,
       ),
       home: Scaffold(
         appBar: AppBar(
           title: Text('EasyList'),
         ),
-        body: ProductManager(startingProduct: 'Food Tester',),
+        body: ProductManager(),
       ),
     );
   }
