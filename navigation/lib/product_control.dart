@@ -8,11 +8,14 @@ class ProductControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RaisedButton(
-        color: Theme.of(context).primaryColor,
-        child: Text('Add Product'),
-        onPressed: () {
-          addProduct('Sweets');
-        },
-      );
+      color: Theme.of(context).primaryColor,
+      child: Text('Add Product'),
+      onPressed: () {
+        addProduct({
+          'title': 'Chocolate',
+          'image': 'assets/food.jpg',
+        });
+      },
+    );
   }
 }
