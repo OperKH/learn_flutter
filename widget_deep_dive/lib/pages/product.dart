@@ -24,7 +24,7 @@ class ProductPage extends StatelessWidget {
             children: <Widget>[
               Image.asset(imageUrl),
               Container(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 4),
+                margin: EdgeInsets.only(top: 10),
                 child: Text('Details!'),
               ),
             ],

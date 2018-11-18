@@ -1,4 +1,4 @@
-name: app_user_input
+name: app_deep_dive
 description: Learn Navigation.
 
 # The following defines the version and build number for your application.
@@ -59,3 +59,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.io/custom-fonts/#from-packages
+  fonts:
+    - family: Oswald
+      fonts:
+        - asset: assets/Oswald-Bold.ttf
+          weight: 700

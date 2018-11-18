@@ -10,7 +10,27 @@ class Products extends StatelessWidget {
       child: Column(
         children: <Widget>[
           Image.asset(products[index]['image']),
-          Text(products[index]['title']),
+          Container(
+            margin: EdgeInsets.fromLTRB(10, 10, 10, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  products[index]['title'],
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Oswald',
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text(
+                  products[index]['price'].toString(),
+                  style: TextStyle(),
+                ),
+              ],
+            ),
+          ),
           ButtonBar(
             alignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -28,7 +48,12 @@ class Products extends StatelessWidget {
   }
 
   Widget _buildProductList() {
-    if (products.length == 0) return Text('No produts');
+    if (products.length == 0) {
+      return Container(
+        margin: EdgeInsets.only(top: 10),
+        child: Text('No produts'),
+      );
+    }
     return ListView.builder(
       itemBuilder: _buildProductItem,
       itemCount: products.length,
