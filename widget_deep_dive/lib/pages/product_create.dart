@@ -55,7 +55,6 @@ class _ProductCreatePage extends State<ProductCreatePage> {
   Widget _buildSaveButton() {
     return RaisedButton(
       child: Text('Save'),
-      color: Theme.of(context).accentColor,
       textColor: Colors.white,
       onPressed: _submitForm,
     );
