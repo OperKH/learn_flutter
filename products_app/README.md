@@ -1,4 +1,4 @@
-# app_deep_dive
+# app_products
 
 A new Flutter project.
 
