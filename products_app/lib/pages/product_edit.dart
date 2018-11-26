@@ -23,9 +23,6 @@ class _ProductEditPageState extends State<ProductEditPage> {
     'image': 'assets/food.jpg',
   };
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final _titleFocusNode = FocusNode();
-  final _descriptionFocusNode = FocusNode();
-  final _priceFocusNode = FocusNode();
 
   Widget _buildTitleTextField() {
     return TextFormField(
@@ -85,20 +82,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
-  void _submitForm() {
-    if (!_formKey.currentState.validate()) return;
-    _formKey.currentState.save();
-    if (widget.product == null) {
-      widget.addProduct(_formData);
-    } else {
-      widget.updateProduct(widget.productIndex, _formData);
-    }
-    Navigator.pushReplacementNamed(context, '/products');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final Widget pageContent = GestureDetector(
+  Widget _buildPageContent() {
+    return GestureDetector(
       onTap: () {
         FocusScope.of(context).requestFocus(FocusNode());
       },
@@ -118,14 +103,28 @@ class _ProductEditPageState extends State<ProductEditPage> {
         ),
       ),
     );
+  }
 
+  void _submitForm() {
+    if (!_formKey.currentState.validate()) return;
+    _formKey.currentState.save();
+    if (widget.product == null) {
+      widget.addProduct(_formData);
+    } else {
+      widget.updateProduct(widget.productIndex, _formData);
+    }
+    Navigator.pushReplacementNamed(context, '/products');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return widget.product == null
-        ? pageContent
+        ? _buildPageContent()
         : Scaffold(
             appBar: AppBar(
               title: Text('Edit product'),
             ),
-            body: pageContent,
+            body: _buildPageContent(),
           );
   }
 }
