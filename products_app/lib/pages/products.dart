@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/products/products.dart';
-import '../models/product.dart';
 
 class ProductsPage extends StatelessWidget {
-  final List<Product> products;
-
-  ProductsPage(this.products);
-
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       child: Column(
@@ -23,9 +18,10 @@ class ProductsPage extends StatelessWidget {
             ],
           ),
           ListTile(
-              leading: Icon(Icons.edit),
-              title: Text('Manage products'),
-              onTap: () => Navigator.pushReplacementNamed(context, '/admin')),
+            leading: Icon(Icons.edit),
+            title: Text('Manage products'),
+            onTap: () => Navigator.pushReplacementNamed(context, '/admin'),
+          ),
         ],
       ),
     );
@@ -38,7 +34,7 @@ class ProductsPage extends StatelessWidget {
       appBar: AppBar(
         title: Text('EasyList'),
       ),
-      body: Products(products),
+      body: Products(),
     );
   }
 }
