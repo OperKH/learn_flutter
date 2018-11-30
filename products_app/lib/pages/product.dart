@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../widgets/products/title_price_row.dart';
 import '../widgets/products/address_tag.dart';
+import '../models/product.dart';
 
 class ProductPage extends StatelessWidget {
-  final Map<String, dynamic> product;
+  final Product product;
 
   ProductPage(this.product);
 
@@ -19,16 +20,16 @@ class ProductPage extends StatelessWidget {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text(product['title']),
+          title: Text(product.title),
         ),
         body: Center(
           child: Column(
             children: <Widget>[
-              Image.asset(product['image']),
+              Image.asset(product.image),
               TitlePriceRow(product),
               AddressTag('Union Square, San Francisko'),
               SizedBox(height: 6),
-              Text(product['description'])
+              Text(product.description)
             ],
           ),
         ),

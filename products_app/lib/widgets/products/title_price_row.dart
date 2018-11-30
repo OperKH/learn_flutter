@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import './price_tag.dart';
 import '../ui_elements/title_default.dart';
+import '../../models/product.dart';
 
 class TitlePriceRow extends StatelessWidget {
-  final Map<String, dynamic> product;
+  final Product product;
 
   TitlePriceRow(this.product);
 
@@ -15,9 +16,9 @@ class TitlePriceRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          TitleDefault(product['title']),
+          TitleDefault(product.title),
           SizedBox(width: 8),
-          PriceTag(product['price'].toString()),
+          PriceTag(product.price.toString()),
         ],
       ),
     );
