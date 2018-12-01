@@ -75,8 +75,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         return RaisedButton(
           child: Text('Save'),
           textColor: Colors.white,
-          onPressed: () => _submitForm(model.addProduct, model.updateProduct,
-              model.selectedProductIndex),
+          onPressed: () => _submitForm(model),
         );
       },
     );
@@ -105,30 +104,26 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
-  void _submitForm(Function addProduct, Function updateProduct,
-      [int selectedProductIndex]) {
+  void _submitForm(MainModel model) {
     if (!_formKey.currentState.validate()) return;
     _formKey.currentState.save();
-    if (selectedProductIndex == null) {
-      addProduct(
-        Product(
-          title: _formData['title'],
-          description: _formData['description'],
-          image: _formData['image'],
-          price: _formData['price'],
-        ),
+    if (model.selectedProductIndex == null) {
+      model.addProduct(
+        title: _formData['title'],
+        description: _formData['description'],
+        image: _formData['image'],
+        price: _formData['price'],
       );
     } else {
-      updateProduct(
-        Product(
-          title: _formData['title'],
-          description: _formData['description'],
-          image: _formData['image'],
-          price: _formData['price'],
-        ),
+      model.updateProduct(
+        title: _formData['title'],
+        description: _formData['description'],
+        image: _formData['image'],
+        price: _formData['price'],
       );
     }
-    Navigator.pushReplacementNamed(context, '/products');
+    Navigator.pushReplacementNamed(context, '/products')
+        .then((value) => model.selectProduct(null));
   }
 
   @override

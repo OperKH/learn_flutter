@@ -1,10 +1,44 @@
+import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 import '../models/product.dart';
+import '../models/user.dart';
 
-mixin ProductsModel on Model {
+mixin ConnectedProductsModel on Model {
   final List<Product> _products = [];
   int _selectedProductIndex;
+  User _authenticatedUser;
+
+  void addProduct({
+    @required String title,
+    @required String description,
+    @required String image,
+    @required double price,
+  }) {
+    final newProduct = Product(
+      title: title,
+      description: description,
+      image: image,
+      userEmail: _authenticatedUser.email,
+      userId: _authenticatedUser.id,
+      price: price,
+    );
+    _products.add(newProduct);
+    notifyListeners();
+  }
+}
+
+mixin UserModel on ConnectedProductsModel {
+  void login(String email, String password) {
+    _authenticatedUser = User(
+      id: 'random',
+      email: email,
+      password: password,
+    );
+  }
+}
+
+mixin ProductsModel on ConnectedProductsModel {
   bool _showFavorites = false;
 
   List<Product> get products {
@@ -32,21 +66,26 @@ mixin ProductsModel on Model {
     return _showFavorites;
   }
 
-  void addProduct(Product product) {
-    _products.add(product);
-    _selectedProductIndex = null;
-    notifyListeners();
-  }
-
-  void updateProduct(Product product) {
-    _products[_selectedProductIndex] = product;
-    _selectedProductIndex = null;
+  void updateProduct({
+    @required String title,
+    @required String description,
+    @required String image,
+    @required double price,
+  }) {
+    final updatedProduct = Product(
+      title: title,
+      description: description,
+      image: image,
+      price: price,
+      userEmail: selectedProduct.userEmail,
+      userId: selectedProduct.userId,
+    );
+    _products[_selectedProductIndex] = updatedProduct;
     notifyListeners();
   }
 
   void deleteProduct() {
     _products.removeAt(_selectedProductIndex);
-    _selectedProductIndex = null;
     notifyListeners();
   }
 
@@ -62,9 +101,10 @@ mixin ProductsModel on Model {
         description: selectedProduct.description,
         price: selectedProduct.price,
         image: selectedProduct.image,
+        userEmail: selectedProduct.userEmail,
+        userId: selectedProduct.userId,
         isFavorite: newFavoriteStatus);
     _products[_selectedProductIndex] = updatedProduct;
-    _selectedProductIndex = null;
     notifyListeners();
   }
 

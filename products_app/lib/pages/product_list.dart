@@ -16,9 +16,7 @@ class ProductListPage extends StatelessWidget {
               return ProductEditPage();
             },
           ),
-        ).then((value) {
-          model.selectProduct(null);
-        });
+        );
       },
     );
   }
@@ -37,6 +35,7 @@ class ProductListPage extends StatelessWidget {
                 if (direction == DismissDirection.endToStart) {
                   model.selectProduct(index);
                   model.deleteProduct();
+                  model.selectProduct(null);
                 }
               },
               background: Container(
