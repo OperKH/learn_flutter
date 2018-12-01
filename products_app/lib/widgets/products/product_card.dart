@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 import './title_price_row.dart';
@@ -45,7 +46,19 @@ class ProductCard extends StatelessWidget {
     return Card(
       child: Column(
         children: <Widget>[
-          Image.asset(product.image),
+          CachedNetworkImage(
+            imageUrl: product.image,
+            height: 300.0,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            placeholder: Container(
+              height: 300.0,
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            errorWidget: Icon(Icons.error),
+          ),
           TitlePriceRow(product),
           AddressTag('Union Square, San Francisko'),
           Text(product.userEmail),

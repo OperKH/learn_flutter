@@ -2,21 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 import './product_card.dart';
-import '../../models/product.dart';
 import '../../scoped-models/main.dart';
 
 class Products extends StatelessWidget {
-  Widget _buildProductList(List<Product> products) {
-    if (products.length == 0) {
-      return Container(
-        margin: EdgeInsets.only(top: 10),
-        child: Text('No produts'),
-      );
-    }
-    return ListView.builder(
-      itemBuilder: (BuildContext context, int index) =>
-          ProductCard(products[index], index),
-      itemCount: products.length,
+  Widget _buildProductList() {
+    return ScopedModelDescendant<MainModel>(
+      builder: (BuildContext context, Widget child, MainModel model) {
+        Widget content;
+        if (model.products == null) {
+          content = Center(
+            child: CircularProgressIndicator(),
+          );
+        } else if (model.products.length == 0) {
+          content = Container(
+            margin: EdgeInsets.only(top: 10.0),
+            child: Text('No produts'),
+          );
+        } else if (model.displayedProducts.length == 0) {
+          content = Container(
+            margin: EdgeInsets.only(top: 10.0),
+            child: Text('No favorite produts'),
+          );
+        } else {
+          content = ListView.builder(
+            itemBuilder: (BuildContext context, int index) =>
+                ProductCard(model.displayedProducts[index], index),
+            itemCount: model.displayedProducts.length,
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: model.fetchProducts,
+          child: content,
+        );
+      },
     );
   }
 
@@ -26,11 +44,7 @@ class Products extends StatelessWidget {
       child: Column(
         children: <Widget>[
           Expanded(
-            child: ScopedModelDescendant<MainModel>(
-              builder: (BuildContext context, Widget child, MainModel model) {
-                return _buildProductList(model.displayedProducts);
-              },
-            ),
+            child: _buildProductList(),
           ),
         ],
       ),

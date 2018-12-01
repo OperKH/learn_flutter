@@ -1,21 +1,61 @@
+import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/product.dart';
 import '../models/user.dart';
 
 mixin ConnectedProductsModel on Model {
-  final List<Product> _products = [];
+  final String BASE_API_URL = 'https://flutter-products-552d4.firebaseio.com';
+  List<Product> _products;
   int _selectedProductIndex;
   User _authenticatedUser;
 
-  void addProduct({
+  Future<void> fetchProducts() async {
+    final http.Response response =
+        await http.get('$BASE_API_URL/products.json');
+    final Map<String, dynamic> responseData = json.decode(response.body);
+    final List<Product> products = [];
+    responseData.forEach((String name, dynamic productMap) {
+      final Product product = Product(
+        id: name,
+        title: productMap['title'],
+        description: productMap['description'],
+        image: productMap['image'],
+        price: productMap['price'],
+        userEmail: productMap['userEmail'],
+        userId: productMap['userId'],
+      );
+      products.add(product);
+    });
+    _products = products;
+    notifyListeners();
+  }
+
+  Future<void> addProduct({
     @required String title,
     @required String description,
     @required String image,
     @required double price,
-  }) {
+  }) async {
+    final Map<String, dynamic> productData = {
+      'title': title,
+      'description': description,
+      'image':
+          'https://www.eatthis.com/wp-content/uploads/2017/10/dark-chocolate-bar-squares.jpg',
+      'price': price,
+      'userEmail': _authenticatedUser.email,
+      'userId': _authenticatedUser.id,
+    };
+    final http.Response response = await http.post(
+      '$BASE_API_URL/products.json',
+      body: json.encode(productData),
+    );
+    final Map<String, dynamic> responseData = json.decode(response.body);
     final newProduct = Product(
+      id: responseData['name'],
       title: title,
       description: description,
       image: image,
@@ -42,10 +82,12 @@ mixin ProductsModel on ConnectedProductsModel {
   bool _showFavorites = false;
 
   List<Product> get products {
+    if (_products == null) return null;
     return List.from(_products);
   }
 
   List<Product> get displayedProducts {
+    if (_products == null) return [];
     if (_showFavorites) {
       return _products.where((Product product) => product.isFavorite).toList();
     }
@@ -57,6 +99,7 @@ mixin ProductsModel on ConnectedProductsModel {
   }
 
   Product get selectedProduct {
+    if (_products == null) return null;
     return _selectedProductIndex == null
         ? null
         : _products[_selectedProductIndex];
@@ -66,13 +109,26 @@ mixin ProductsModel on ConnectedProductsModel {
     return _showFavorites;
   }
 
-  void updateProduct({
+  Future<void> updateProduct({
     @required String title,
     @required String description,
     @required String image,
     @required double price,
-  }) {
+  }) async {
+    final Map<String, dynamic> updateData = {
+      'title': title,
+      'description': description,
+      'image': selectedProduct.image,
+      'price': price,
+      'userEmail': selectedProduct.userEmail,
+      'userId': selectedProduct.userId,
+    };
+    final response = await http.put(
+      '$BASE_API_URL/products/${selectedProduct.id}.json',
+      body: json.encode(updateData),
+    );
     final updatedProduct = Product(
+      id: selectedProduct.id,
       title: title,
       description: description,
       image: image,
@@ -84,7 +140,8 @@ mixin ProductsModel on ConnectedProductsModel {
     notifyListeners();
   }
 
-  void deleteProduct() {
+  Future<void> deleteProduct() async {
+    await http.delete('$BASE_API_URL/products/${selectedProduct.id}.json');
     _products.removeAt(_selectedProductIndex);
     notifyListeners();
   }
@@ -97,6 +154,7 @@ mixin ProductsModel on ConnectedProductsModel {
     final bool isCurrentlyFavorite = selectedProduct.isFavorite;
     final bool newFavoriteStatus = !isCurrentlyFavorite;
     final Product updatedProduct = Product(
+        id: selectedProduct.id,
         title: selectedProduct.title,
         description: selectedProduct.description,
         price: selectedProduct.price,

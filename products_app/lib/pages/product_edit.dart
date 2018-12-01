@@ -16,9 +16,10 @@ class _ProductEditPageState extends State<ProductEditPage> {
     'title': null,
     'description': null,
     'price': null,
-    'image': 'assets/food.jpg',
+    'image': null,
   };
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
 
   Widget _buildTitleTextField(Product product) {
     return TextFormField(
@@ -69,14 +70,18 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget _buildSaveButton(product) {
     return ScopedModelDescendant<MainModel>(
       builder: (BuildContext context, Widget child, MainModel model) {
-        return RaisedButton(
-          child: Text('Save'),
-          textColor: Colors.white,
-          onPressed: () => _submitForm(model),
-        );
+        return _isSaving
+            ? Center(
+                child: CircularProgressIndicator(),
+              )
+            : RaisedButton(
+                child: Text('Save'),
+                textColor: Colors.white,
+                onPressed: () => _submitForm(model, product),
+              );
       },
     );
   }
@@ -87,7 +92,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         FocusScope.of(context).requestFocus(FocusNode());
       },
       child: Container(
-        margin: EdgeInsets.only(left: 10, right: 10),
+        margin: EdgeInsets.symmetric(horizontal: 10.0),
         child: Form(
           key: _formKey,
           child: ListView(
@@ -95,8 +100,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
               _buildTitleTextField(product),
               _buildDescriptionTextField(product),
               _buildPriceTextField(product),
-              SizedBox(height: 10),
-              _buildSaveButton(),
+              SizedBox(height: 10.0),
+              _buildSaveButton(product),
             ],
           ),
         ),
@@ -104,24 +109,30 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
-  void _submitForm(MainModel model) {
+  void _submitForm(MainModel model, Product product) async {
     if (!_formKey.currentState.validate()) return;
     _formKey.currentState.save();
+    setState(() {
+      _isSaving = true;
+    });
     if (model.selectedProductIndex == null) {
-      model.addProduct(
+      await model.addProduct(
         title: _formData['title'],
         description: _formData['description'],
         image: _formData['image'],
         price: _formData['price'],
       );
     } else {
-      model.updateProduct(
+      await model.updateProduct(
         title: _formData['title'],
         description: _formData['description'],
-        image: _formData['image'],
+        image: _formData['image'] == null ? product.image : _formData['image'],
         price: _formData['price'],
       );
     }
+    setState(() {
+      _isSaving = false;
+    });
     Navigator.pushReplacementNamed(context, '/products')
         .then((value) => model.selectProduct(null));
   }

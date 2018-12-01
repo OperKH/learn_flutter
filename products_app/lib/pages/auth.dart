@@ -104,7 +104,7 @@ class _AuthPageState extends State<AuthPage> {
         decoration: BoxDecoration(
           image: _buildBackgroundImage(),
         ),
-        padding: EdgeInsets.only(left: 10, right: 10),
+        padding: EdgeInsets.symmetric(horizontal: 10.0),
         child: Center(
           child: SingleChildScrollView(
             child: Container(
@@ -114,10 +114,10 @@ class _AuthPageState extends State<AuthPage> {
                 child: Column(
                   children: <Widget>[
                     _buildEmailTextField(),
-                    SizedBox(height: 10),
+                    SizedBox(height: 10.0),
                     _buildPasswordTextField(),
                     _buildAcceptSwitch(),
-                    SizedBox(height: 10),
+                    SizedBox(height: 10.0),
                     ScopedModelDescendant<MainModel>(
                       builder: (BuildContext context, Widget child,
                           MainModel model) {
