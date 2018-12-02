@@ -26,7 +26,7 @@ class Products extends StatelessWidget {
         } else {
           content = ListView.builder(
             itemBuilder: (BuildContext context, int index) =>
-                ProductCard(model.displayedProducts[index], index),
+                ProductCard(model.displayedProducts[index]),
             itemCount: model.displayedProducts.length,
           );
         }

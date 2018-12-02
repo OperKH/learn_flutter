@@ -10,9 +10,9 @@ import '../models/product.dart';
 import '../scoped-models/main.dart';
 
 class ProductPage extends StatelessWidget {
-  final int productIndex;
+  final String productId;
 
-  ProductPage(this.productIndex);
+  ProductPage(this.productId);
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +23,8 @@ class ProductPage extends StatelessWidget {
       },
       child: ScopedModelDescendant<MainModel>(
         builder: (BuildContext context, Widget child, MainModel model) {
-          final Product product = model.products[productIndex];
+          final Product product =
+              model.products.firstWhere((product) => product.id == productId);
           return Scaffold(
             appBar: AppBar(
               title: Text(product.title),
@@ -46,7 +47,7 @@ class ProductPage extends StatelessWidget {
                   ),
                   TitlePriceRow(product),
                   AddressTag('Union Square, San Francisko'),
-                  SizedBox(height: 6),
+                  SizedBox(height: 6.0),
                   Text(product.description)
                 ],
               ),

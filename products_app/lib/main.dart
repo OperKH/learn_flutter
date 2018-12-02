@@ -19,8 +19,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
+    final MainModel model = MainModel();
     return ScopedModel<MainModel>(
-      model: MainModel(),
+      model: model,
       child: MaterialApp(
         theme: ThemeData(
           primarySwatch: Colors.deepOrange,
@@ -38,9 +39,9 @@ class _MyAppState extends State<MyApp> {
           if (pathElements[0] != '') return null;
           switch (pathElements[1]) {
             case 'product':
-              final int index = int.parse(pathElements[2]);
+              final String productId = pathElements[2];
               return MaterialPageRoute<bool>(
-                builder: (BuildContext context) => ProductPage(index),
+                builder: (BuildContext context) => ProductPage(productId),
               );
             default:
               return null;

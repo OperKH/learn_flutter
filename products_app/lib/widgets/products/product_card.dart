@@ -9,9 +9,8 @@ import '../../scoped-models/main.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  final int productIndex;
 
-  ProductCard(this.product, this.productIndex);
+  ProductCard(this.product);
 
   Widget _buildProductBar(BuildContext context) {
     return ButtonBar(
@@ -21,7 +20,7 @@ class ProductCard extends StatelessWidget {
           icon: Icon(Icons.info),
           color: Colors.blue,
           onPressed: () =>
-              Navigator.pushNamed(context, '/product/$productIndex'),
+              Navigator.pushNamed(context, '/product/${product.id}'),
         ),
         ScopedModelDescendant<MainModel>(
           builder: (BuildContext context, Widget child, MainModel model) {
@@ -30,7 +29,7 @@ class ProductCard extends StatelessWidget {
                   product.isFavorite ? Icons.favorite : Icons.favorite_border),
               color: Colors.red,
               onPressed: () {
-                model.selectProduct(productIndex);
+                model.selectProduct(product.id);
                 model.toggleProductFavoriteStatus();
                 model.selectProduct(null);
               },

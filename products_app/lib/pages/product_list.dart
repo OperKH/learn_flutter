@@ -24,14 +24,16 @@ class _ProductListPageState extends State<ProductListPage> {
     return IconButton(
       icon: Icon(Icons.edit),
       onPressed: () {
-        model.selectProduct(index);
+        model.selectProduct(model.products[index].id);
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (BuildContext context) {
               return ProductEditPage();
             },
           ),
-        );
+        ).then((value) {
+          model.selectProduct(null);
+        });
       },
     );
   }
@@ -61,7 +63,7 @@ class _ProductListPageState extends State<ProductListPage> {
               direction: DismissDirection.endToStart,
               onDismissed: (DismissDirection direction) async {
                 if (direction == DismissDirection.endToStart) {
-                  model.selectProduct(index);
+                  model.selectProduct(model.products[index].id);
                   await model.deleteProduct();
                   model.selectProduct(null);
                 }

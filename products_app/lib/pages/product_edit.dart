@@ -115,26 +115,45 @@ class _ProductEditPageState extends State<ProductEditPage> {
     setState(() {
       _isSaving = true;
     });
-    if (model.selectedProductIndex == null) {
-      await model.addProduct(
-        title: _formData['title'],
-        description: _formData['description'],
-        image: _formData['image'],
-        price: _formData['price'],
-      );
-    } else {
-      await model.updateProduct(
-        title: _formData['title'],
-        description: _formData['description'],
-        image: _formData['image'] == null ? product.image : _formData['image'],
-        price: _formData['price'],
+    try {
+      if (model.selectedProductIndex == -1) {
+        await model.addProduct(
+          title: _formData['title'],
+          description: _formData['description'],
+          image: _formData['image'],
+          price: _formData['price'],
+        );
+      } else {
+        await model.updateProduct(
+          title: _formData['title'],
+          description: _formData['description'],
+          image:
+              _formData['image'] == null ? product.image : _formData['image'],
+          price: _formData['price'],
+        );
+      }
+      Navigator.pushReplacementNamed(context, '/products')
+          .then((value) => model.selectProduct(null));
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Something went wrong!'),
+            content: Text('Please try again!'),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
       );
     }
     setState(() {
       _isSaving = false;
     });
-    Navigator.pushReplacementNamed(context, '/products')
-        .then((value) => model.selectProduct(null));
   }
 
   @override
@@ -143,7 +162,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
       builder: (BuildContext context, Widget child, MainModel model) {
         final Widget pageContent =
             _buildPageContent(context, model.selectedProduct);
-        return model.selectedProductIndex == null
+        return model.selectedProductIndex == -1
             ? pageContent
             : Scaffold(
                 appBar: AppBar(
