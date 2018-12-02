@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:http/http.dart' show Response;
 
 import '../models/product.dart';
 import '../models/user.dart';
 
-import '../api/api.dart' as productsApi;
+import '../api/auth.dart' as auth;
+import '../api/productsApi.dart' as productsApi;
 
 mixin ConnectedProductsModel on Model {
   List<Product> _products;
@@ -15,7 +17,27 @@ mixin ConnectedProductsModel on Model {
 }
 
 mixin UserModel on ConnectedProductsModel {
-  void login(String email, String password) {
+  Future<Map<String, dynamic>> signup(String email, String password) async {
+    final Map<String, dynamic> data = {
+      'email': email,
+      'password': password,
+      'returnSecureToken': true,
+    };
+    final response = await auth.signupNewUser(data);
+    final Map<String, dynamic> responseData = json.decode(response.body);
+    print(responseData);
+    bool hasError = true;
+    String message = 'Something went wrong!';
+    if (responseData.containsKey('idToken')) {
+      hasError = false;
+      message = 'Authentication succeded!';
+    } else if (responseData['error']['message'] == 'EMAIL_EXISTS') {
+      message = 'This email alredy exists!';
+    }
+    return {'success': !hasError, 'message': message};
+  }
+
+  Future<Map<String, dynamic>> login(String email, String password) async {
     _authenticatedUser = User(
       id: 'random',
       email: email,
