@@ -18,10 +18,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   @override
+  void initState() {
+    mainModel.autoAuthenticate();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final MainModel model = MainModel();
     return ScopedModel<MainModel>(
-      model: model,
+      model: mainModel,
       child: MaterialApp(
         theme: ThemeData(
           primarySwatch: Colors.deepOrange,
@@ -30,7 +35,8 @@ class _MyAppState extends State<MyApp> {
         ),
         // home: AuthenticatePage(),
         routes: {
-          '/': (BuildContext context) => AuthPage(),
+          '/': (BuildContext context) =>
+              mainModel.user == null ? AuthPage() : ProductsPage(),
           '/products': (BuildContext context) => ProductsPage(),
           '/admin': (BuildContext context) => ProductsAdminPage(),
         },

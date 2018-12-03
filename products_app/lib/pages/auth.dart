@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 import '../scoped-models/main.dart';
-
-enum AuthMode {
-  Login,
-  Signup,
-}
+import '../models/auth.dart';
 
 class AuthPage extends StatefulWidget {
   @override
@@ -25,6 +21,7 @@ class _AuthPageState extends State<AuthPage> {
   final TextEditingController _passwordTextFieldController =
       TextEditingController();
   AuthMode _authMode = AuthMode.Login;
+  bool isAuthorizing = false;
 
   DecorationImage _buildBackgroundImage() {
     return DecorationImage(
@@ -114,18 +111,48 @@ class _AuthPageState extends State<AuthPage> {
           );
   }
 
+  Widget _buildSwitchModeBtn() {
+    return FlatButton(
+      onPressed: () {
+        setState(() {
+          _authMode =
+              _authMode == AuthMode.Login ? AuthMode.Signup : AuthMode.Login;
+        });
+      },
+      child:
+          Text('Switch to ${_authMode == AuthMode.Login ? 'Signup' : 'Login'}'),
+    );
+  }
+
+  Widget _buildSubmitBtn() {
+    return ScopedModelDescendant<MainModel>(
+      builder: (BuildContext context, Widget child, MainModel model) {
+        return isAuthorizing
+            ? CircularProgressIndicator()
+            : RaisedButton(
+                textColor: Colors.white,
+                child:
+                    Text('${_authMode == AuthMode.Login ? 'LOGIN' : 'SIGNUP'}'),
+                onPressed: () => _submitForm(model),
+              );
+      },
+    );
+  }
+
   void _submitForm(MainModel model) async {
     if (!_formKey.currentState.validate()) {
       return;
     }
     _formKey.currentState.save();
     try {
-      Map<String, dynamic> status;
-      if (_authMode == AuthMode.Login) {
-        status = await model.login(_formData['email'], _formData['password']);
-      } else {
-        status = await model.signup(_formData['email'], _formData['password']);
-      }
+      setState(() {
+        isAuthorizing = true;
+      });
+      final Map<String, dynamic> status = await model.authenticate(
+          _formData['email'], _formData['password'], _authMode);
+      setState(() {
+        isAuthorizing = false;
+      });
       if (status['success'] == true) {
         Navigator.pushReplacementNamed(context, '/products');
       } else {
@@ -146,6 +173,9 @@ class _AuthPageState extends State<AuthPage> {
         );
       }
     } catch (e) {
+      setState(() {
+        isAuthorizing = false;
+      });
       print(e);
     }
   }
@@ -180,29 +210,9 @@ class _AuthPageState extends State<AuthPage> {
                     _buildPasswordConfirmTextField(),
                     _buildAcceptSwitch(),
                     SizedBox(height: 10.0),
-                    FlatButton(
-                      onPressed: () {
-                        setState(() {
-                          _authMode = _authMode == AuthMode.Login
-                              ? AuthMode.Signup
-                              : AuthMode.Login;
-                        });
-                      },
-                      child: Text(
-                          'Switch to ${_authMode == AuthMode.Login ? 'Signup' : 'Login'}'),
-                    ),
+                    _buildSwitchModeBtn(),
                     SizedBox(height: 10.0),
-                    ScopedModelDescendant<MainModel>(
-                      builder: (BuildContext context, Widget child,
-                          MainModel model) {
-                        return RaisedButton(
-                          textColor: Colors.white,
-                          child: Text(
-                              '${_authMode == AuthMode.Login ? 'LOGIN' : 'SIGNUP'}'),
-                          onPressed: () => _submitForm(model),
-                        );
-                      },
-                    ),
+                    _buildSubmitBtn(),
                   ],
                 ),
               ),

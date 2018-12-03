@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:http/http.dart' show Response;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/product.dart';
 import '../models/user.dart';
+import '../models/auth.dart';
 
 import '../api/auth.dart' as auth;
 import '../api/productsApi.dart' as productsApi;
@@ -14,16 +16,30 @@ mixin ConnectedProductsModel on Model {
   List<Product> _products;
   String _selectedProductId;
   User _authenticatedUser;
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
 }
 
 mixin UserModel on ConnectedProductsModel {
-  Future<Map<String, dynamic>> signup(String email, String password) async {
+  Timer _authTimer;
+  User get user {
+    return _authenticatedUser;
+  }
+
+  String get token {
+    if (_authenticatedUser == null) return null;
+    return _authenticatedUser.token;
+  }
+
+  Future<Map<String, dynamic>> authenticate(String email, String password,
+      [AuthMode mode = AuthMode.Login]) async {
     final Map<String, dynamic> data = {
       'email': email,
       'password': password,
       'returnSecureToken': true,
     };
-    final response = await auth.signupNewUser(data);
+    final Response response = mode == AuthMode.Login
+        ? await auth.loginUser(data)
+        : await auth.signupNewUser(data);
     final Map<String, dynamic> responseData = json.decode(response.body);
     print(responseData);
     bool hasError = true;
@@ -31,18 +47,92 @@ mixin UserModel on ConnectedProductsModel {
     if (responseData.containsKey('idToken')) {
       hasError = false;
       message = 'Authentication succeded!';
-    } else if (responseData['error']['message'] == 'EMAIL_EXISTS') {
-      message = 'This email alredy exists!';
+
+      final int expiresIn = int.parse(responseData['expiresIn']);
+      setAuthTimout(expiresIn);
+
+      final DateTime expiryTime = DateTime.now()
+        ..add(Duration(seconds: expiresIn));
+      final SharedPreferences prefs = await _prefs;
+      prefs.setString('userId', responseData['localId']);
+      prefs.setString('userToken', responseData['idToken']);
+      prefs.setString('userEmail', email);
+      prefs.setString('userPassword', password);
+      prefs.setString('expiryTime', expiryTime.toIso8601String());
+
+      _authenticatedUser = User(
+        id: responseData['localId'],
+        token: responseData['idToken'],
+        email: email,
+        password: password,
+      );
+    } else {
+      switch (responseData['error']['message']) {
+        case 'EMAIL_EXISTS':
+          message = 'This email alredy exists!';
+          break;
+        case 'EMAIL_NOT_FOUND':
+          message = 'This user not registered!';
+          break;
+        case 'INVALID_PASSWORD':
+          message = 'The password is invalid!';
+          break;
+        case 'EMAIL_NOT_FOUND':
+          message = 'This user has been disabled!';
+          break;
+        case 'TOO_MANY_ATTEMPTS_TRY_LATER':
+          message = 'Too many attempts please try later!';
+          break;
+      }
     }
     return {'success': !hasError, 'message': message};
   }
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<void> logout() async {
+    _authenticatedUser = null;
+    _authTimer?.cancel();
+    final SharedPreferences prefs = await _prefs;
+    await Future.wait([
+      prefs.remove('userToken'),
+      prefs.remove('userId'),
+      prefs.remove('userEmail'),
+      prefs.remove('userPassword'),
+    ]);
+    notifyListeners();
+  }
+
+  Future<void> autoAuthenticate() async {
+    final SharedPreferences prefs = await _prefs;
+    final String token = prefs.getString('userToken');
+    if (token == null) return null;
+    final String expiryTimeString = prefs.getString('expiryTime');
+    final DateTime expiryTime = DateTime.parse(expiryTimeString);
+    final DateTime now = DateTime.now();
+    if (expiryTime.isBefore(now)) {
+      await logout();
+      return null;
+    }
+    final String id = prefs.getString('userId');
+    final String email = prefs.getString('userEmail');
+    final String password = prefs.getString('userPassword');
+
     _authenticatedUser = User(
-      id: 'random',
+      id: id,
+      token: token,
       email: email,
       password: password,
     );
+
+    final int expireIn = expiryTime.difference(now).inSeconds;
+    setAuthTimout(expireIn);
+
+    notifyListeners();
+  }
+
+  void setAuthTimout(int time) {
+    _authTimer = Timer(Duration(seconds: time), () {
+      logout();
+    });
   }
 }
 
@@ -85,7 +175,7 @@ mixin ProductsModel on ConnectedProductsModel {
   }
 
   Future<void> fetchProducts() async {
-    final response = await productsApi.getProducts();
+    final Response response = await productsApi.getProducts();
     final Map<String, dynamic> responseData = json.decode(response.body);
     final List<Product> products = [];
     responseData.forEach((String name, dynamic productMap) {
@@ -119,7 +209,7 @@ mixin ProductsModel on ConnectedProductsModel {
       'userEmail': _authenticatedUser.email,
       'userId': _authenticatedUser.id,
     };
-    final response = await productsApi.createProduct(productData);
+    final Response response = await productsApi.createProduct(productData);
     final Map<String, dynamic> responseData = json.decode(response.body);
     final newProduct = Product(
       id: responseData['name'],
@@ -148,8 +238,7 @@ mixin ProductsModel on ConnectedProductsModel {
       'userEmail': selectedProduct.userEmail,
       'userId': selectedProduct.userId,
     };
-    final response =
-        await productsApi.updateProduct(updateData, selectedProduct.id);
+    await productsApi.updateProduct(updateData, selectedProduct.id);
     final updatedProduct = Product(
       id: selectedProduct.id,
       title: title,

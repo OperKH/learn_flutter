@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import './product_edit.dart';
 import './product_list.dart';
 
+import '../widgets/ui_elements/logout_list_tile.dart';
+
 class ProductsAdminPage extends StatelessWidget {
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
@@ -17,6 +19,8 @@ class ProductsAdminPage extends StatelessWidget {
             title: Text('All Products'),
             onTap: () => Navigator.pushReplacementNamed(context, '/products'),
           ),
+          Divider(),
+          LogoutListTile(),
         ],
       ),
     );

@@ -4,3 +4,5 @@ import './connected_products.dart';
 
 class MainModel extends Model
     with ConnectedProductsModel, ProductsModel, UserModel {}
+
+final mainModel = MainModel();
