@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:dio/dio.dart' show DioError;
 
 import '../scoped-models/main.dart';
 import '../models/auth.dart';
@@ -144,40 +145,58 @@ class _AuthPageState extends State<AuthPage> {
       return;
     }
     _formKey.currentState.save();
+    setState(() {
+      isAuthorizing = true;
+    });
     try {
-      setState(() {
-        isAuthorizing = true;
-      });
-      final Map<String, dynamic> status = await model.authenticate(
+      await model.authenticate(
           _formData['email'], _formData['password'], _authMode);
-      setState(() {
-        isAuthorizing = false;
-      });
-      if (status['success'] == true) {
-        Navigator.pushReplacementNamed(context, '/products');
-      } else {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text('Something went wrong!'),
-              content: Text(status['message']),
-              actions: <Widget>[
-                FlatButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
-      }
+      Navigator.pushReplacementNamed(context, '/products');
+    } on DioError catch (e) {
+      String msg = _getAuthErrorMsg(e.response.data);
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Auth Error!'),
+            content: Text(msg),
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     } catch (e) {
-      setState(() {
-        isAuthorizing = false;
-      });
       print(e);
     }
+    setState(() {
+      isAuthorizing = false;
+    });
+  }
+
+  String _getAuthErrorMsg(dynamic responseData) {
+    String message = 'Something went wrong!';
+    switch (responseData['error']['message']) {
+      case 'EMAIL_EXISTS':
+        message = 'This email alredy exists!';
+        break;
+      case 'EMAIL_NOT_FOUND':
+        message = 'This user not registered!';
+        break;
+      case 'INVALID_PASSWORD':
+        message = 'The password is invalid!';
+        break;
+      case 'EMAIL_NOT_FOUND':
+        message = 'This user has been disabled!';
+        break;
+      case 'TOO_MANY_ATTEMPTS_TRY_LATER':
+        message = 'Too many attempts please try later!';
+        break;
+    }
+    return message;
   }
 
   @override

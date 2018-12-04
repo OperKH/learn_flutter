@@ -1,4 +1,7 @@
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 
-const String BASE_API_URL = 'https://flutter-products-552d4.firebaseio.com';
-final client = http.Client();
+Options _options = Options(
+  baseUrl: 'https://flutter-products-552d4.firebaseio.com',
+);
+
+final Dio client = Dio(_options);

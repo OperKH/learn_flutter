@@ -1,30 +1,29 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart' show Response;
 
 import './api.dart';
 
 import '../scoped-models/main.dart';
 
-Future<http.Response> getProducts() {
-  return client.get('$BASE_API_URL/products.json?auth=${mainModel.token}');
+Future<Response> getProducts() {
+  return client.get('/products.json?auth=${mainModel.token}');
 }
 
-Future<http.Response> createProduct(Map<String, dynamic> data) {
+Future<Response> createProduct(Map<String, dynamic> data) {
   return client.post(
-    '$BASE_API_URL/products.json?auth=${mainModel.token}',
-    body: json.encode(data),
+    '/products.json?auth=${mainModel.token}',
+    data: data,
   );
 }
 
-Future<http.Response> updateProduct(Map<String, dynamic> data, String id) {
+Future<Response> updateProduct(Map<String, dynamic> data, String id) {
   return client.put(
-    '$BASE_API_URL/products/$id.json?auth=${mainModel.token}',
-    body: json.encode(data),
+    '/products/$id.json?auth=${mainModel.token}',
+    data: data,
   );
 }
 
-Future<http.Response> deleteProduct(String id) {
-  return client
-      .delete('$BASE_API_URL/products/$id.json?auth=${mainModel.token}');
+Future<Response> deleteProduct(String id) {
+  return client.delete('/products/$id.json?auth=${mainModel.token}');
 }

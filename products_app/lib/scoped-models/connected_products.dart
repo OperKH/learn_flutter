@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
-import 'package:http/http.dart' show Response;
+import 'package:dio/dio.dart' show Response;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/product.dart';
@@ -40,14 +40,9 @@ mixin UserModel on ConnectedProductsModel {
     final Response response = mode == AuthMode.Login
         ? await auth.loginUser(data)
         : await auth.signupNewUser(data);
-    final Map<String, dynamic> responseData = json.decode(response.body);
-    print(responseData);
-    bool hasError = true;
-    String message = 'Something went wrong!';
-    if (responseData.containsKey('idToken')) {
-      hasError = false;
-      message = 'Authentication succeded!';
+    final Map<String, dynamic> responseData = response.data;
 
+    if (responseData.containsKey('idToken')) {
       final int expiresIn = int.parse(responseData['expiresIn']);
       setAuthTimout(expiresIn);
 
@@ -66,26 +61,8 @@ mixin UserModel on ConnectedProductsModel {
         email: email,
         password: password,
       );
-    } else {
-      switch (responseData['error']['message']) {
-        case 'EMAIL_EXISTS':
-          message = 'This email alredy exists!';
-          break;
-        case 'EMAIL_NOT_FOUND':
-          message = 'This user not registered!';
-          break;
-        case 'INVALID_PASSWORD':
-          message = 'The password is invalid!';
-          break;
-        case 'EMAIL_NOT_FOUND':
-          message = 'This user has been disabled!';
-          break;
-        case 'TOO_MANY_ATTEMPTS_TRY_LATER':
-          message = 'Too many attempts please try later!';
-          break;
-      }
     }
-    return {'success': !hasError, 'message': message};
+    return response.data;
   }
 
   Future<void> logout() async {
@@ -176,7 +153,7 @@ mixin ProductsModel on ConnectedProductsModel {
 
   Future<void> fetchProducts() async {
     final Response response = await productsApi.getProducts();
-    final Map<String, dynamic> responseData = json.decode(response.body);
+    final Map<String, dynamic> responseData = response.data;
     final List<Product> products = [];
     responseData.forEach((String name, dynamic productMap) {
       final Product product = Product(
@@ -210,7 +187,7 @@ mixin ProductsModel on ConnectedProductsModel {
       'userId': _authenticatedUser.id,
     };
     final Response response = await productsApi.createProduct(productData);
-    final Map<String, dynamic> responseData = json.decode(response.body);
+    final Map<String, dynamic> responseData = response.data;
     final newProduct = Product(
       id: responseData['name'],
       title: title,
