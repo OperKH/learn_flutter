@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:dio/dio.dart' show Response;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rxdart/subjects.dart';
 
 import '../models/product.dart';
 import '../models/user.dart';
@@ -21,6 +21,8 @@ mixin ConnectedProductsModel on Model {
 
 mixin UserModel on ConnectedProductsModel {
   Timer _authTimer;
+  PublishSubject<bool> _userSubject = PublishSubject();
+
   User get user {
     return _authenticatedUser;
   }
@@ -28,6 +30,10 @@ mixin UserModel on ConnectedProductsModel {
   String get token {
     if (_authenticatedUser == null) return null;
     return _authenticatedUser.token;
+  }
+
+  PublishSubject<bool> get userSubject {
+    return _userSubject;
   }
 
   Future<Map<String, dynamic>> authenticate(String email, String password,
@@ -44,10 +50,10 @@ mixin UserModel on ConnectedProductsModel {
 
     if (responseData.containsKey('idToken')) {
       final int expiresIn = int.parse(responseData['expiresIn']);
-      setAuthTimout(expiresIn);
+      setAuthTimoute(expiresIn);
 
-      final DateTime expiryTime = DateTime.now()
-        ..add(Duration(seconds: expiresIn));
+      final DateTime expiryTime =
+          DateTime.now().add(Duration(seconds: expiresIn));
       final SharedPreferences prefs = await _prefs;
       prefs.setString('userId', responseData['localId']);
       prefs.setString('userToken', responseData['idToken']);
@@ -61,11 +67,13 @@ mixin UserModel on ConnectedProductsModel {
         email: email,
         password: password,
       );
+      _userSubject.add(true);
     }
     return response.data;
   }
 
   Future<void> logout() async {
+    print('Logout');
     _authenticatedUser = null;
     _authTimer?.cancel();
     final SharedPreferences prefs = await _prefs;
@@ -74,7 +82,9 @@ mixin UserModel on ConnectedProductsModel {
       prefs.remove('userId'),
       prefs.remove('userEmail'),
       prefs.remove('userPassword'),
+      prefs.remove('expiryTime'),
     ]);
+    _userSubject.add(false);
     notifyListeners();
   }
 
@@ -100,16 +110,16 @@ mixin UserModel on ConnectedProductsModel {
       password: password,
     );
 
+    _userSubject.add(true);
+
     final int expireIn = expiryTime.difference(now).inSeconds;
-    setAuthTimout(expireIn);
+    setAuthTimoute(expireIn);
 
     notifyListeners();
   }
 
-  void setAuthTimout(int time) {
-    _authTimer = Timer(Duration(seconds: time), () {
-      logout();
-    });
+  void setAuthTimoute(int time) {
+    _authTimer = Timer(Duration(seconds: time), logout);
   }
 }
 

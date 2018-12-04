@@ -17,9 +17,15 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  bool _isAuthenticated = false;
   @override
   void initState() {
     mainModel.autoAuthenticate();
+    mainModel.userSubject.listen((bool isAuthenticated) {
+      setState(() {
+        _isAuthenticated = isAuthenticated;
+      });
+    });
     super.initState();
   }
 
@@ -36,18 +42,26 @@ class _MyAppState extends State<MyApp> {
         // home: AuthenticatePage(),
         routes: {
           '/': (BuildContext context) =>
-              mainModel.user == null ? AuthPage() : ProductsPage(),
-          '/products': (BuildContext context) => ProductsPage(),
-          '/admin': (BuildContext context) => ProductsAdminPage(),
+              !_isAuthenticated ? AuthPage() : ProductsPage(),
+          '/products': (BuildContext context) =>
+              !_isAuthenticated ? AuthPage() : ProductsPage(),
+          '/admin': (BuildContext context) =>
+              !_isAuthenticated ? AuthPage() : ProductsAdminPage(),
         },
         onGenerateRoute: (RouteSettings settings) {
+          if (!_isAuthenticated) {
+            return MaterialPageRoute<bool>(
+              builder: (BuildContext context) => AuthPage(),
+            );
+          }
           final List<String> pathElements = settings.name.split('/');
           if (pathElements[0] != '') return null;
           switch (pathElements[1]) {
             case 'product':
               final String productId = pathElements[2];
               return MaterialPageRoute<bool>(
-                builder: (BuildContext context) => ProductPage(productId),
+                builder: (BuildContext context) =>
+                    !_isAuthenticated ? AuthPage() : ProductPage(productId),
               );
             default:
               return null;
@@ -55,7 +69,8 @@ class _MyAppState extends State<MyApp> {
         },
         onUnknownRoute: (RouteSettings settings) {
           return MaterialPageRoute(
-              builder: (BuildContext context) => ProductsPage());
+              builder: (BuildContext context) =>
+                  !_isAuthenticated ? AuthPage() : ProductsPage());
         },
       ),
     );
