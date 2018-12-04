@@ -28,9 +28,9 @@ class ProductCard extends StatelessWidget {
               icon: Icon(
                   product.isFavorite ? Icons.favorite : Icons.favorite_border),
               color: Colors.red,
-              onPressed: () {
+              onPressed: () async {
                 model.selectProduct(product.id);
-                model.toggleProductFavoriteStatus();
+                await model.toggleProductFavoriteStatus();
                 model.selectProduct(null);
               },
             );

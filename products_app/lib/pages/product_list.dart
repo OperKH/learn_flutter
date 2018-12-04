@@ -16,7 +16,7 @@ class _ProductListPageState extends State<ProductListPage> {
   @override
   void initState() {
     MainModel model = ScopedModel.of(context);
-    model.fetchProducts();
+    model.fetchProducts(isOnlyForUser: true);
     super.initState();
   }
 

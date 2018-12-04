@@ -161,11 +161,17 @@ mixin ProductsModel on ConnectedProductsModel {
     return _showFavorites;
   }
 
-  Future<void> fetchProducts() async {
+  Future<void> fetchProducts({bool isOnlyForUser = false}) async {
+    _products = null;
+    notifyListeners();
     final Response response = await productsApi.getProducts();
     final Map<String, dynamic> responseData = response.data;
     final List<Product> products = [];
     responseData.forEach((String name, dynamic productMap) {
+      final Map<String, dynamic> wishlistUsers = productMap['wishlistUsers'];
+      final bool isFavorite = wishlistUsers == null
+          ? false
+          : wishlistUsers.containsKey(_authenticatedUser.id);
       final Product product = Product(
         id: name,
         title: productMap['title'],
@@ -174,10 +180,15 @@ mixin ProductsModel on ConnectedProductsModel {
         price: productMap['price'],
         userEmail: productMap['userEmail'],
         userId: productMap['userId'],
+        isFavorite: isFavorite,
       );
       products.add(product);
     });
-    _products = products;
+    _products = isOnlyForUser
+        ? products.where((Product product) {
+            return product.userId == _authenticatedUser.id;
+          }).toList()
+        : products;
     notifyListeners();
   }
 
@@ -249,21 +260,59 @@ mixin ProductsModel on ConnectedProductsModel {
     _selectedProductId = productId;
   }
 
-  void toggleProductFavoriteStatus() {
+  Future<void> toggleProductFavoriteStatus() async {
     final bool isCurrentlyFavorite = selectedProduct.isFavorite;
     final bool newFavoriteStatus = !isCurrentlyFavorite;
+    final int index = selectedProductIndex;
+    final Product product = _products[index];
+
     final Product updatedProduct = Product(
-      id: selectedProduct.id,
-      title: selectedProduct.title,
-      description: selectedProduct.description,
-      price: selectedProduct.price,
-      image: selectedProduct.image,
-      userEmail: selectedProduct.userEmail,
-      userId: selectedProduct.userId,
+      id: product.id,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      image: product.image,
+      userEmail: product.userEmail,
+      userId: product.userId,
       isFavorite: newFavoriteStatus,
     );
-    _products[selectedProductIndex] = updatedProduct;
+    _products[index] = updatedProduct;
     notifyListeners();
+
+    try {
+      if (newFavoriteStatus) {
+        await productsApi.likeProduct(
+            selectedProduct.id, _authenticatedUser.id);
+      } else {
+        await productsApi.unlikeProduct(
+            selectedProduct.id, _authenticatedUser.id);
+      }
+      final Product updatedProduct = Product(
+        id: product.id,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        image: product.image,
+        userEmail: product.userEmail,
+        userId: product.userId,
+        isFavorite: newFavoriteStatus,
+      );
+      _products[index] = updatedProduct;
+      notifyListeners();
+    } catch (e) {
+      final Product updatedProduct = Product(
+        id: product.id,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        image: product.image,
+        userEmail: product.userEmail,
+        userId: product.userId,
+        isFavorite: !newFavoriteStatus,
+      );
+      _products[index] = updatedProduct;
+      notifyListeners();
+    }
   }
 
   void toggleDisplayMode() {

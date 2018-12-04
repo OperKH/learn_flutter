@@ -27,3 +27,14 @@ Future<Response> updateProduct(Map<String, dynamic> data, String id) {
 Future<Response> deleteProduct(String id) {
   return client.delete('/products/$id.json?auth=${mainModel.token}');
 }
+
+Future<Response> likeProduct(String id, String userId) {
+  return client.put(
+      '/products/$id/wishlistUsers/$userId.json?auth=${mainModel.token}',
+      data: true);
+}
+
+Future<Response> unlikeProduct(String id, String userId) {
+  return client.delete(
+      '/products/$id/wishlistUsers/$userId.json?auth=${mainModel.token}');
+}

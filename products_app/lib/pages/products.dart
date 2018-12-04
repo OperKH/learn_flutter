@@ -27,20 +27,6 @@ class _ProductsPageState extends State<ProductsPage> {
           AppBar(
             automaticallyImplyLeading: false,
             title: Text('Choose'),
-            actions: <Widget>[
-              ScopedModelDescendant<MainModel>(
-                builder: (BuildContext context, Widget child, MainModel model) {
-                  return IconButton(
-                    icon: Icon(model.displayFavoritesOnly
-                        ? Icons.favorite
-                        : Icons.favorite_border),
-                    onPressed: () {
-                      model.toggleDisplayMode();
-                    },
-                  );
-                },
-              )
-            ],
           ),
           ListTile(
             leading: Icon(Icons.edit),
