@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/location.dart';
 
 // 41.40338, 2.17403
 
@@ -13,71 +15,125 @@ class LocationInput extends StatefulWidget {
 }
 
 class _LocationInputState extends State<LocationInput> {
-  final FocusNode _addressInputFocusNode = FocusNode();
-  final LatLng _initial_pos = LatLng(41.40338, 2.17403);
+  final TextEditingController _locationTextCtrl = TextEditingController();
+
+  Location _location = Location();
+  String _locationPermissionError;
+  // final LatLng _initial_pos = LatLng(41.40338, 2.17403);
   GoogleMapController _mapController;
 
   @override
   void initState() {
-    _addressInputFocusNode.addListener(_updateLocation);
     super.initState();
+  }
+
+  _getLocation() async {
+    Map<String, double> location;
+    try {
+      bool per = await _location.hasPermission();
+      print('Location Has Permission: $per');
+      location = await _location.getLocation();
+      if (mounted) {
+        setState(() {
+          _locationPermissionError = null;
+        });
+      }
+    } on PlatformException catch (e) {
+      String error = 'Unknown Error';
+      print('Location Error Code: ${e.code}');
+      if (e.code == 'PERMISSION_DENIED' ||
+          e.code == 'PERMISSION_DENIED_NEVER_ASK') {
+        error =
+            'Location Permission denied - please enable it from the app settings';
+      }
+      if (mounted) {
+        setState(() {
+          _locationPermissionError = error;
+        });
+      }
+    } catch (e) {
+      print(e);
+    }
+    return location;
   }
 
   @override
   void dispose() {
-    _addressInputFocusNode.removeListener(_updateLocation);
+    _mapController.removeListener(_onMapChanged);
     super.dispose();
   }
 
-  void _onMapCreated(GoogleMapController controller) {
+  void _onMapCreated(GoogleMapController controller) async {
     setState(() {
       _mapController = controller;
     });
-    controller.addMarker(MarkerOptions(
-      position: _initial_pos,
-    ));
-    controller.animateCamera(CameraUpdate.newCameraPosition(
+    _mapController.addListener(_onMapChanged);
+    final Map<String, double> location = await _getLocation();
+    if (location == null) return;
+    final LatLng position = LatLng(location['latitude'], location['longitude']);
+    _locationTextCtrl.text = '${position.latitude}, ${position.longitude}';
+    controller.moveCamera(CameraUpdate.newCameraPosition(
       CameraPosition(
-        target: _initial_pos,
+        target: position,
         zoom: 17.0,
       ),
     ));
   }
 
-  void _updateLocation() {}
+  void _onMapChanged() {
+    final LatLng position = _mapController.cameraPosition.target;
+    if (!_mapController.isCameraMoving) {
+      _locationTextCtrl.text = '${position.latitude}, ${position.longitude}';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
         TextFormField(
+          controller: _locationTextCtrl,
           decoration: InputDecoration(labelText: 'Location'),
-          focusNode: _addressInputFocusNode,
+          enabled: false,
         ),
         SizedBox(height: 10.0),
         SizedBox(
-          width: 500.0,
           height: 300.0,
-          child: GoogleMap(
-            onMapCreated: _onMapCreated,
-            options: GoogleMapOptions(
-              cameraPosition: CameraPosition(
-                target: _initial_pos,
-                zoom: 17.0,
+          child: Stack(
+            alignment: AlignmentDirectional.center,
+            children: <Widget>[
+              GoogleMap(
+                onMapCreated: _onMapCreated,
+                options: GoogleMapOptions(
+                  trackCameraPosition: true,
+                  myLocationEnabled: true,
+                ),
+                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
+                  Factory<OneSequenceGestureRecognizer>(
+                    () => EagerGestureRecognizer(),
+                  ),
+                  // Factory<OneSequenceGestureRecognizer>(
+                  //   () => ScaleGestureRecognizer(),
+                  // ),
+                ].toSet(),
               ),
-              // trackCameraPosition: true,
-              myLocationEnabled: true,
-            ),
-            gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
-              Factory<OneSequenceGestureRecognizer>(
-                () => EagerGestureRecognizer(),
+              Positioned(
+                bottom: 148.0,
+                child: Icon(
+                  Icons.location_on,
+                  color: Colors.red[700],
+                  size: 32.0,
+                ),
               ),
-              // Factory<OneSequenceGestureRecognizer>(
-              //   () => ScaleGestureRecognizer(),
-              // ),
-            ].toSet(),
+            ],
           ),
         ),
+        _locationPermissionError == null
+            ? Container()
+            : Text(
+                _locationPermissionError,
+                style: TextStyle(color: Colors.red),
+              )
       ],
     );
   }
