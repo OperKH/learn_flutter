@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import './pages/auth.dart';
 import './pages/product.dart';
@@ -26,6 +27,7 @@ class _MyAppState extends State<MyApp> {
         _isAuthenticated = isAuthenticated;
       });
     });
+    PermissionHandler().requestPermissions([PermissionGroup.locationWhenInUse]);
     super.initState();
   }
 

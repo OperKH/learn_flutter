@@ -8,6 +8,7 @@ import 'package:rxdart/subjects.dart';
 import '../models/product.dart';
 import '../models/user.dart';
 import '../models/auth.dart';
+import '../models/locationCoordinates.dart';
 
 import '../api/auth.dart' as auth;
 import '../api/productsApi.dart' as productsApi;
@@ -172,6 +173,12 @@ mixin ProductsModel on ConnectedProductsModel {
       final bool isFavorite = wishlistUsers == null
           ? false
           : wishlistUsers.containsKey(_authenticatedUser.id);
+      final latitude = productMap['locationLatitude'];
+      final longitude = productMap['locationLongitude'];
+      final LocationCoordinates location =
+          (latitude == null || longitude == null)
+              ? null
+              : LocationCoordinates(latitude: latitude, longitude: longitude);
       final Product product = Product(
         id: name,
         title: productMap['title'],
@@ -181,6 +188,7 @@ mixin ProductsModel on ConnectedProductsModel {
         userEmail: productMap['userEmail'],
         userId: productMap['userId'],
         isFavorite: isFavorite,
+        location: location,
       );
       products.add(product);
     });
@@ -197,6 +205,7 @@ mixin ProductsModel on ConnectedProductsModel {
     @required String description,
     @required String image,
     @required double price,
+    @required LocationCoordinates location,
   }) async {
     final Map<String, dynamic> productData = {
       'title': title,
@@ -206,6 +215,8 @@ mixin ProductsModel on ConnectedProductsModel {
       'price': price,
       'userEmail': _authenticatedUser.email,
       'userId': _authenticatedUser.id,
+      'locationLatitude': location.latitude,
+      'locationLongitude': location.longitude,
     };
     final Response response = await productsApi.createProduct(productData);
     final Map<String, dynamic> responseData = response.data;
@@ -217,6 +228,7 @@ mixin ProductsModel on ConnectedProductsModel {
       userEmail: _authenticatedUser.email,
       userId: _authenticatedUser.id,
       price: price,
+      location: location,
     );
     _products.add(newProduct);
     notifyListeners();
@@ -227,6 +239,7 @@ mixin ProductsModel on ConnectedProductsModel {
     @required String description,
     @required String image,
     @required double price,
+    @required LocationCoordinates location,
   }) async {
     final Map<String, dynamic> updateData = {
       'title': title,
@@ -235,6 +248,8 @@ mixin ProductsModel on ConnectedProductsModel {
       'price': price,
       'userEmail': selectedProduct.userEmail,
       'userId': selectedProduct.userId,
+      'locationLatitude': location.latitude,
+      'locationLongitude': location.longitude,
     };
     await productsApi.updateProduct(updateData, selectedProduct.id);
     final updatedProduct = Product(
@@ -245,6 +260,7 @@ mixin ProductsModel on ConnectedProductsModel {
       price: price,
       userEmail: selectedProduct.userEmail,
       userId: selectedProduct.userId,
+      location: location,
     );
     _products[selectedProductIndex] = updatedProduct;
     notifyListeners();

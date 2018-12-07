@@ -21,6 +21,7 @@ dependencies:
   cached_network_image: ^0.5.1
   google_maps_flutter: ^0.0.3+3
   shared_preferences: ^0.4.3
+  permission_handler: ^2.1.2
   cupertino_icons: ^0.1.2
   scoped_model: ^0.3.0
   location: ^1.4.1

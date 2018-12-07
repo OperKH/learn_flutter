@@ -5,9 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
-// 41.40338, 2.17403
+import '../../models/locationCoordinates.dart';
 
 class LocationInput extends StatefulWidget {
+  final Function _setParentState;
+  final LocationCoordinates _coordinates;
+
+  LocationInput(this._setParentState, [this._coordinates]);
+
   @override
   State<StatefulWidget> createState() {
     return _LocationInputState();
@@ -19,7 +24,6 @@ class _LocationInputState extends State<LocationInput> {
 
   Location _location = Location();
   String _locationPermissionError;
-  // final LatLng _initial_pos = LatLng(41.40338, 2.17403);
   GoogleMapController _mapController;
 
   @override
@@ -68,23 +72,36 @@ class _LocationInputState extends State<LocationInput> {
       _mapController = controller;
     });
     _mapController.addListener(_onMapChanged);
-    final Map<String, double> location = await _getLocation();
-    if (location == null) return;
-    final LatLng position = LatLng(location['latitude'], location['longitude']);
-    _locationTextCtrl.text = '${position.latitude}, ${position.longitude}';
-    controller.moveCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(
-        target: position,
-        zoom: 17.0,
+    LatLng position;
+    if (widget._coordinates == null) {
+      final Map<String, double> location = await _getLocation();
+      if (location != null) {
+        position = LatLng(location['latitude'], location['longitude']);
+      }
+    } else {
+      position =
+          LatLng(widget._coordinates.latitude, widget._coordinates.longitude);
+    }
+    await _mapController.updateMapOptions(
+      GoogleMapOptions(
+        cameraPosition: CameraPosition(
+          target: position,
+          zoom: 17.0,
+        ),
       ),
-    ));
+    );
   }
 
-  void _onMapChanged() {
+  void _onMapChanged() async {
+    if (_mapController.isCameraMoving) return;
     final LatLng position = _mapController.cameraPosition.target;
-    if (!_mapController.isCameraMoving) {
-      _locationTextCtrl.text = '${position.latitude}, ${position.longitude}';
-    }
+    widget._setParentState(
+      LocationCoordinates(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      ),
+    );
+    _locationTextCtrl.text = '${position.latitude}, ${position.longitude}';
   }
 
   @override

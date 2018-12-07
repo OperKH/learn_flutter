@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 import '../models/product.dart';
+import '../models/locationCoordinates.dart';
 import '../scoped-models/main.dart';
 import '../widgets/form_inputs/location.dart';
 
@@ -18,6 +19,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     'description': null,
     'price': null,
     'image': null,
+    'location': null,
   };
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isSaving = false;
@@ -87,6 +89,10 @@ class _ProductEditPageState extends State<ProductEditPage> {
     );
   }
 
+  void _setFormLocation(LocationCoordinates location) {
+    _formData['location'] = location;
+  }
+
   Widget _buildPageContent(BuildContext context, Product product) {
     return GestureDetector(
       onTap: () {
@@ -102,7 +108,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
               _buildDescriptionTextField(product),
               _buildPriceTextField(product),
               SizedBox(height: 10.0),
-              LocationInput(),
+              LocationInput(_setFormLocation, product?.location),
               SizedBox(height: 10.0),
               _buildSaveButton(product),
             ],
@@ -125,6 +131,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
           description: _formData['description'],
           image: _formData['image'],
           price: _formData['price'],
+          location: _formData['location'],
         );
       } else {
         await model.updateProduct(
@@ -133,6 +140,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
           image:
               _formData['image'] == null ? product.image : _formData['image'],
           price: _formData['price'],
+          location: _formData['location'],
         );
       }
       Navigator.pushReplacementNamed(context, '/products')
