@@ -94,15 +94,12 @@ class _ProductEditPageState extends State<ProductEditPage> {
   }
 
   Widget _buildPageContent(BuildContext context, Product product) {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).requestFocus(FocusNode());
-      },
+    return SingleChildScrollView(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 10.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
             children: <Widget>[
               _buildTitleTextField(product),
               _buildDescriptionTextField(product),
@@ -125,7 +122,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
       _isSaving = true;
     });
     try {
-      if (model.selectedProductIndex == -1) {
+      if (model.selectedProductId == null) {
         await model.addProduct(
           title: _formData['title'],
           description: _formData['description'],
@@ -143,8 +140,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
           location: _formData['location'],
         );
       }
-      Navigator.pushReplacementNamed(context, '/products')
-          .then((value) => model.selectProduct(null));
+      Navigator.pushReplacementNamed(context, '/products');
     } catch (e) {
       showDialog(
         context: context,
@@ -173,7 +169,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
       builder: (BuildContext context, Widget child, MainModel model) {
         final Widget pageContent =
             _buildPageContent(context, model.selectedProduct);
-        return model.selectedProductIndex == -1
+        return model.selectedProductId == null
             ? pageContent
             : Scaffold(
                 appBar: AppBar(

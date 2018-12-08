@@ -291,6 +291,7 @@ mixin ProductsModel on ConnectedProductsModel {
       userEmail: product.userEmail,
       userId: product.userId,
       isFavorite: newFavoriteStatus,
+      location: product.location,
     );
     _products[index] = updatedProduct;
     notifyListeners();
@@ -312,6 +313,7 @@ mixin ProductsModel on ConnectedProductsModel {
         userEmail: product.userEmail,
         userId: product.userId,
         isFavorite: newFavoriteStatus,
+        location: product.location,
       );
       _products[index] = updatedProduct;
       notifyListeners();
@@ -325,6 +327,7 @@ mixin ProductsModel on ConnectedProductsModel {
         userEmail: product.userEmail,
         userId: product.userId,
         isFavorite: !newFavoriteStatus,
+        location: product.location,
       );
       _products[index] = updatedProduct;
       notifyListeners();
