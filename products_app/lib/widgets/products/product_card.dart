@@ -59,7 +59,10 @@ class ProductCard extends StatelessWidget {
             errorWidget: Icon(Icons.error),
           ),
           TitlePriceRow(product),
-          AddressTag('Union Square, San Francisko'),
+          AddressTag(
+            '${product.location.latitude}, ${product.location.longitude}',
+          ),
+          SizedBox(height: 6.0),
           Text(product.userEmail),
           _buildProductBar(context),
         ],

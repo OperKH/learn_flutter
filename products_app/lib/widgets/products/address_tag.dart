@@ -16,7 +16,14 @@ class AddressTag extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(10.0),
       ),
-      child: Text(address),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: <Widget>[
+          Icon(Icons.location_on, size: 18.0),
+          SizedBox(width: 3.0),
+          Text(address),
+        ],
+      ),
     );
   }
 }

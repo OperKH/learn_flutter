@@ -176,9 +176,7 @@ mixin ProductsModel on ConnectedProductsModel {
       final latitude = productMap['locationLatitude'];
       final longitude = productMap['locationLongitude'];
       final LocationCoordinates location =
-          (latitude == null || longitude == null)
-              ? null
-              : LocationCoordinates(latitude: latitude, longitude: longitude);
+          LocationCoordinates(latitude: latitude, longitude: longitude);
       final Product product = Product(
         id: name,
         title: productMap['title'],
