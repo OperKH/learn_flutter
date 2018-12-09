@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 
@@ -94,6 +96,10 @@ class _ProductEditPageState extends State<ProductEditPage> {
     _formData['location'] = location;
   }
 
+  void _setImage(File image) {
+    _formData['image'] = image;
+  }
+
   Widget _buildPageContent(BuildContext context, Product product) {
     return SingleChildScrollView(
       child: Container(
@@ -106,7 +112,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
               _buildDescriptionTextField(product),
               _buildPriceTextField(product),
               SizedBox(height: 10.0),
-              ImageInput(),
+              ImageInput(_setImage, product?.image),
               SizedBox(height: 10.0),
               LocationInput(_setFormLocation, product?.location),
               SizedBox(height: 10.0),
@@ -119,7 +125,8 @@ class _ProductEditPageState extends State<ProductEditPage> {
   }
 
   void _submitForm(MainModel model, Product product) async {
-    if (!_formKey.currentState.validate()) return;
+    if (!_formKey.currentState.validate() ||
+        (model.selectedProductId == null && _formData['image'] == null)) return;
     _formKey.currentState.save();
     setState(() {
       _isSaving = true;

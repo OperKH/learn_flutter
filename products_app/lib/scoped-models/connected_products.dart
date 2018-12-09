@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:dio/dio.dart' show Response;
@@ -12,6 +13,7 @@ import '../models/locationCoordinates.dart';
 
 import '../api/auth.dart' as auth;
 import '../api/productsApi.dart' as productsApi;
+import '../api/storeImage.dart';
 
 mixin ConnectedProductsModel on Model {
   List<Product> _products;
@@ -198,18 +200,25 @@ mixin ProductsModel on ConnectedProductsModel {
     notifyListeners();
   }
 
+  Future<Map<String, dynamic>> _uploadImage(File image,
+      {String imagePath}) async {
+    final response = await storeImage(image, imagePath);
+    return response.data;
+  }
+
   Future<void> addProduct({
     @required String title,
     @required String description,
-    @required String image,
+    @required File image,
     @required double price,
     @required LocationCoordinates location,
   }) async {
+    final Map<String, dynamic> uploadedData = await _uploadImage(image);
     final Map<String, dynamic> productData = {
       'title': title,
       'description': description,
-      'image':
-          'https://www.eatthis.com/wp-content/uploads/2017/10/dark-chocolate-bar-squares.jpg',
+      'image': uploadedData['imageUrl'],
+      'imagePath': uploadedData['imagePath'],
       'price': price,
       'userEmail': _authenticatedUser.email,
       'userId': _authenticatedUser.id,
@@ -222,7 +231,7 @@ mixin ProductsModel on ConnectedProductsModel {
       id: responseData['name'],
       title: title,
       description: description,
-      image: image,
+      image: '',
       userEmail: _authenticatedUser.email,
       userId: _authenticatedUser.id,
       price: price,
@@ -235,14 +244,18 @@ mixin ProductsModel on ConnectedProductsModel {
   Future<void> updateProduct({
     @required String title,
     @required String description,
-    @required String image,
+    @required File image,
     @required double price,
     @required LocationCoordinates location,
+    String imagePath,
   }) async {
+    final Map<String, dynamic> uploadedData =
+        await _uploadImage(image, imagePath: imagePath);
     final Map<String, dynamic> updateData = {
       'title': title,
       'description': description,
-      'image': selectedProduct.image,
+      'image': uploadedData['imageUrl'],
+      'imagePath': uploadedData['imagePath'],
       'price': price,
       'userEmail': selectedProduct.userEmail,
       'userId': selectedProduct.userId,
@@ -254,7 +267,7 @@ mixin ProductsModel on ConnectedProductsModel {
       id: selectedProduct.id,
       title: title,
       description: description,
-      image: image,
+      image: '',
       price: price,
       userEmail: selectedProduct.userEmail,
       userId: selectedProduct.userId,
