@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ImageInput extends StatefulWidget {
-  Function setImage;
-  String imageUrl;
+  final Function setImage;
+  final String imageUrl;
 
-  ImageInput(this.setImage, this.imageUrl);
+  ImageInput(this.setImage, [this.imageUrl]);
 
   @override
   State<StatefulWidget> createState() {
@@ -19,6 +19,7 @@ class _ImageInputState extends State<ImageInput> {
   File _imageFile;
 
   Future _getImage(BuildContext context, ImageSource source) async {
+    Navigator.of(context).pop();
     final File file = await ImagePicker.pickImage(
       source: source,
       maxWidth: 480.0,
@@ -28,7 +29,6 @@ class _ImageInputState extends State<ImageInput> {
       _imageFile = file;
     });
     widget.setImage(file);
-    Navigator.of(context).pop();
   }
 
   void _addPhoto(BuildContext context) {
@@ -87,6 +87,22 @@ class _ImageInputState extends State<ImageInput> {
   @override
   Widget build(BuildContext context) {
     final buttonColor = Theme.of(context).primaryColor;
+    Widget previewImage = Text('Please pick an image.');
+    if (_imageFile != null) {
+      previewImage = Image.file(
+        _imageFile,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: 300.0,
+      );
+    } else if (widget.imageUrl != null) {
+      previewImage = Image.network(
+        widget.imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: 300.0,
+      );
+    }
     return Column(
       children: <Widget>[
         OutlineButton(
@@ -101,21 +117,14 @@ class _ImageInputState extends State<ImageInput> {
               Icon(Icons.image, color: buttonColor),
               SizedBox(width: 6.0),
               Text(
-                '${_imageFile == null ? 'Add' : 'Update'} an image',
+                '${_imageFile == null && widget.imageUrl == null ? 'Add' : 'Update'} an image',
                 style: TextStyle(color: buttonColor),
               ),
             ],
           ),
         ),
         SizedBox(height: 10.0),
-        _imageFile == null
-            ? Text('Please pick an image.')
-            : Image.file(
-                _imageFile,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: 300.0,
-              ),
+        previewImage,
       ],
     );
   }

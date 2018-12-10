@@ -7,7 +7,7 @@ import './api.dart';
 
 Future<Response> storeImage(File file, [String imagePath]) {
   FormData formData = new FormData.from({
-    'image': UploadFileInfo(file, file.uri.pathSegments.last)
+    'image': UploadFileInfo(file, file.uri.pathSegments.last),
   });
   if (imagePath != null) {
     formData.add('formData', imagePath);

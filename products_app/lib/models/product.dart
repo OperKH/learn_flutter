@@ -7,6 +7,7 @@ class Product {
   final String title;
   final String description;
   final String image;
+  final String imagePath;
   final double price;
   final String userEmail;
   final String userId;
@@ -18,6 +19,7 @@ class Product {
     @required this.title,
     @required this.description,
     @required this.image,
+    @required this.imagePath,
     @required this.price,
     @required this.userEmail,
     @required this.userId,

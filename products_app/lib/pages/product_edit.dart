@@ -144,8 +144,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
         await model.updateProduct(
           title: _formData['title'],
           description: _formData['description'],
-          image:
-              _formData['image'] == null ? product.image : _formData['image'],
+          image: _formData['image'],
           price: _formData['price'],
           location: _formData['location'],
         );

@@ -184,6 +184,7 @@ mixin ProductsModel on ConnectedProductsModel {
         title: productMap['title'],
         description: productMap['description'],
         image: productMap['image'],
+        imagePath: productMap['imagePath'],
         price: productMap['price'],
         userEmail: productMap['userEmail'],
         userId: productMap['userId'],
@@ -231,7 +232,8 @@ mixin ProductsModel on ConnectedProductsModel {
       id: responseData['name'],
       title: title,
       description: description,
-      image: '',
+      image: uploadedData['imageUrl'],
+      imagePath: uploadedData['imagePath'],
       userEmail: _authenticatedUser.email,
       userId: _authenticatedUser.id,
       price: price,
@@ -247,15 +249,20 @@ mixin ProductsModel on ConnectedProductsModel {
     @required File image,
     @required double price,
     @required LocationCoordinates location,
-    String imagePath,
   }) async {
-    final Map<String, dynamic> uploadedData =
-        await _uploadImage(image, imagePath: imagePath);
+    String imageUrl = selectedProduct.image;
+    String imagePath = selectedProduct.imagePath;
+    if (image != null) {
+      final Map<String, dynamic> uploadedData =
+          await _uploadImage(image, imagePath: imagePath);
+      imageUrl = uploadedData['imageUrl'];
+      imagePath = uploadedData['imagePath'];
+    }
     final Map<String, dynamic> updateData = {
       'title': title,
       'description': description,
-      'image': uploadedData['imageUrl'],
-      'imagePath': uploadedData['imagePath'],
+      'image': imageUrl,
+      'imagePath': imagePath,
       'price': price,
       'userEmail': selectedProduct.userEmail,
       'userId': selectedProduct.userId,
@@ -267,7 +274,8 @@ mixin ProductsModel on ConnectedProductsModel {
       id: selectedProduct.id,
       title: title,
       description: description,
-      image: '',
+      image: imageUrl,
+      imagePath: imagePath,
       price: price,
       userEmail: selectedProduct.userEmail,
       userId: selectedProduct.userId,
@@ -299,6 +307,7 @@ mixin ProductsModel on ConnectedProductsModel {
       description: product.description,
       price: product.price,
       image: product.image,
+      imagePath: product.imagePath,
       userEmail: product.userEmail,
       userId: product.userId,
       isFavorite: newFavoriteStatus,
@@ -321,6 +330,7 @@ mixin ProductsModel on ConnectedProductsModel {
         description: product.description,
         price: product.price,
         image: product.image,
+        imagePath: product.imagePath,
         userEmail: product.userEmail,
         userId: product.userId,
         isFavorite: newFavoriteStatus,
@@ -335,6 +345,7 @@ mixin ProductsModel on ConnectedProductsModel {
         description: product.description,
         price: product.price,
         image: product.image,
+        imagePath: product.imagePath,
         userEmail: product.userEmail,
         userId: product.userId,
         isFavorite: !newFavoriteStatus,
