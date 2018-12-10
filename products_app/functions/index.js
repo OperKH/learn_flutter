@@ -82,3 +82,12 @@ exports.storeImage = functions.https.onRequest((request, response) => {
     return busboy.end(request.rawBody);
   });
 });
+
+exports.deleteImage = functions.database
+  .ref('/products/{productId}')
+  .onDelete(snapshot => {
+    const { imagePath = null } = snapshot.val();
+    if (imagePath === null) return null;
+    const bucket = gcs.bucket('flutter-products-552d4.appspot.com');
+    return bucket.file(imagePath).delete();
+  });
