@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:dio/dio.dart' show Response;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:rxdart/subjects.dart';
 
 import '../models/product.dart';
@@ -19,7 +20,7 @@ mixin ConnectedProductsModel on Model {
   List<Product> _products;
   String _selectedProductId;
   User _authenticatedUser;
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 }
 
 mixin UserModel on ConnectedProductsModel {
@@ -57,12 +58,15 @@ mixin UserModel on ConnectedProductsModel {
 
       final DateTime expiryTime =
           DateTime.now().add(Duration(seconds: expiresIn));
-      final SharedPreferences prefs = await _prefs;
-      prefs.setString('userId', responseData['localId']);
-      prefs.setString('userToken', responseData['idToken']);
-      prefs.setString('userEmail', email);
-      prefs.setString('userPassword', password);
-      prefs.setString('expiryTime', expiryTime.toIso8601String());
+
+      await Future.wait([
+        _secureStorage.write(key: 'userId', value: responseData['localId']),
+        _secureStorage.write(key: 'userToken', value: responseData['idToken']),
+        _secureStorage.write(key: 'userEmail', value: email),
+        _secureStorage.write(key: 'userPassword', value: password),
+        _secureStorage.write(
+            key: 'expiryTime', value: expiryTime.toIso8601String()),
+      ]);
 
       _authenticatedUser = User(
         id: responseData['localId'],
@@ -79,32 +83,31 @@ mixin UserModel on ConnectedProductsModel {
     print('Logout');
     _authenticatedUser = null;
     _authTimer?.cancel();
-    final SharedPreferences prefs = await _prefs;
     await Future.wait([
-      prefs.remove('userToken'),
-      prefs.remove('userId'),
-      prefs.remove('userEmail'),
-      prefs.remove('userPassword'),
-      prefs.remove('expiryTime'),
+      _secureStorage.delete(key: 'userToken'),
+      _secureStorage.delete(key: 'userId'),
+      _secureStorage.delete(key: 'userEmail'),
+      _secureStorage.delete(key: 'userPassword'),
+      _secureStorage.delete(key: 'expiryTime'),
     ]);
     _userSubject.add(false);
     notifyListeners();
   }
 
   Future<void> autoAuthenticate() async {
-    final SharedPreferences prefs = await _prefs;
-    final String token = prefs.getString('userToken');
+    final String token = await _secureStorage.read(key: 'userToken');
     if (token == null) return null;
-    final String expiryTimeString = prefs.getString('expiryTime');
+    final String expiryTimeString =
+        await _secureStorage.read(key: 'expiryTime');
     final DateTime expiryTime = DateTime.parse(expiryTimeString);
     final DateTime now = DateTime.now();
     if (expiryTime.isBefore(now)) {
       await logout();
       return null;
     }
-    final String id = prefs.getString('userId');
-    final String email = prefs.getString('userEmail');
-    final String password = prefs.getString('userPassword');
+    final String id = await _secureStorage.read(key: 'userId');
+    final String email = await _secureStorage.read(key: 'userEmail');
+    final String password = await _secureStorage.read(key: 'userPassword');
 
     _authenticatedUser = User(
       id: id,
@@ -167,38 +170,38 @@ mixin ProductsModel on ConnectedProductsModel {
   Future<void> fetchProducts({bool isOnlyForUser = false}) async {
     _products = null;
     notifyListeners();
-    final Response response = await productsApi.getProducts();
-    final Map<String, dynamic> responseData = response.data;
-    final List<Product> products = [];
-    responseData.forEach((String name, dynamic productMap) {
-      final Map<String, dynamic> wishlistUsers = productMap['wishlistUsers'];
-      final bool isFavorite = wishlistUsers == null
-          ? false
-          : wishlistUsers.containsKey(_authenticatedUser.id);
-      final latitude = productMap['locationLatitude'];
-      final longitude = productMap['locationLongitude'];
-      final LocationCoordinates location =
-          LocationCoordinates(latitude: latitude, longitude: longitude);
-      final Product product = Product(
-        id: name,
-        title: productMap['title'],
-        description: productMap['description'],
-        image: productMap['image'],
-        imagePath: productMap['imagePath'],
-        price: productMap['price'],
-        userEmail: productMap['userEmail'],
-        userId: productMap['userId'],
-        isFavorite: isFavorite,
-        location: location,
-      );
-      products.add(product);
-    });
-    _products = isOnlyForUser
-        ? products.where((Product product) {
-            return product.userId == _authenticatedUser.id;
-          }).toList()
-        : products;
-    notifyListeners();
+    try {
+      final Response response = await productsApi.getProducts();
+      final Map<String, dynamic> responseData = response.data;
+      final List<Product> products = [];
+      responseData.forEach((String name, dynamic productMap) {
+        if (isOnlyForUser && productMap['userId'] != _authenticatedUser.id)
+          return;
+        final Map<String, dynamic> wishlistUsers = productMap['wishlistUsers'];
+        final bool isFavorite = wishlistUsers == null
+            ? false
+            : wishlistUsers.containsKey(_authenticatedUser.id);
+        final latitude = productMap['locationLatitude'];
+        final longitude = productMap['locationLongitude'];
+        final LocationCoordinates location =
+            LocationCoordinates(latitude: latitude, longitude: longitude);
+        final Product product = Product(
+          id: name,
+          title: productMap['title'],
+          description: productMap['description'],
+          image: productMap['image'],
+          imagePath: productMap['imagePath'],
+          price: productMap['price'],
+          userEmail: productMap['userEmail'],
+          userId: productMap['userId'],
+          isFavorite: isFavorite,
+          location: location,
+        );
+        products.add(product);
+      });
+      _products = products;
+      notifyListeners();
+    } catch (e) {}
   }
 
   Future<Map<String, dynamic>> _uploadImage(File image,
@@ -214,33 +217,35 @@ mixin ProductsModel on ConnectedProductsModel {
     @required double price,
     @required LocationCoordinates location,
   }) async {
-    final Map<String, dynamic> uploadedData = await _uploadImage(image);
-    final Map<String, dynamic> productData = {
-      'title': title,
-      'description': description,
-      'image': uploadedData['imageUrl'],
-      'imagePath': uploadedData['imagePath'],
-      'price': price,
-      'userEmail': _authenticatedUser.email,
-      'userId': _authenticatedUser.id,
-      'locationLatitude': location.latitude,
-      'locationLongitude': location.longitude,
-    };
-    final Response response = await productsApi.createProduct(productData);
-    final Map<String, dynamic> responseData = response.data;
-    final newProduct = Product(
-      id: responseData['name'],
-      title: title,
-      description: description,
-      image: uploadedData['imageUrl'],
-      imagePath: uploadedData['imagePath'],
-      userEmail: _authenticatedUser.email,
-      userId: _authenticatedUser.id,
-      price: price,
-      location: location,
-    );
-    _products.add(newProduct);
-    notifyListeners();
+    try {
+      final Map<String, dynamic> uploadedData = await _uploadImage(image);
+      final Map<String, dynamic> productData = {
+        'title': title,
+        'description': description,
+        'image': uploadedData['imageUrl'],
+        'imagePath': uploadedData['imagePath'],
+        'price': price,
+        'userEmail': _authenticatedUser.email,
+        'userId': _authenticatedUser.id,
+        'locationLatitude': location.latitude,
+        'locationLongitude': location.longitude,
+      };
+      final Response response = await productsApi.createProduct(productData);
+      final Map<String, dynamic> responseData = response.data;
+      final newProduct = Product(
+        id: responseData['name'],
+        title: title,
+        description: description,
+        image: uploadedData['imageUrl'],
+        imagePath: uploadedData['imagePath'],
+        userEmail: _authenticatedUser.email,
+        userId: _authenticatedUser.id,
+        price: price,
+        location: location,
+      );
+      _products.add(newProduct);
+      notifyListeners();
+    } catch (e) {}
   }
 
   Future<void> updateProduct({
@@ -250,45 +255,49 @@ mixin ProductsModel on ConnectedProductsModel {
     @required double price,
     @required LocationCoordinates location,
   }) async {
-    String imageUrl = selectedProduct.image;
-    String imagePath = selectedProduct.imagePath;
-    if (image != null) {
-      final Map<String, dynamic> uploadedData =
-          await _uploadImage(image, imagePath: imagePath);
-      imageUrl = uploadedData['imageUrl'];
-      imagePath = uploadedData['imagePath'];
-    }
-    final Map<String, dynamic> updateData = {
-      'title': title,
-      'description': description,
-      'image': imageUrl,
-      'imagePath': imagePath,
-      'price': price,
-      'userEmail': selectedProduct.userEmail,
-      'userId': selectedProduct.userId,
-      'locationLatitude': location.latitude,
-      'locationLongitude': location.longitude,
-    };
-    await productsApi.updateProduct(updateData, selectedProduct.id);
-    final updatedProduct = Product(
-      id: selectedProduct.id,
-      title: title,
-      description: description,
-      image: imageUrl,
-      imagePath: imagePath,
-      price: price,
-      userEmail: selectedProduct.userEmail,
-      userId: selectedProduct.userId,
-      location: location,
-    );
-    _products[selectedProductIndex] = updatedProduct;
-    notifyListeners();
+    try {
+      String imageUrl = selectedProduct.image;
+      String imagePath = selectedProduct.imagePath;
+      if (image != null) {
+        final Map<String, dynamic> uploadedData =
+            await _uploadImage(image, imagePath: imagePath);
+        imageUrl = uploadedData['imageUrl'];
+        imagePath = uploadedData['imagePath'];
+      }
+      final Map<String, dynamic> updateData = {
+        'title': title,
+        'description': description,
+        'image': imageUrl,
+        'imagePath': imagePath,
+        'price': price,
+        'userEmail': selectedProduct.userEmail,
+        'userId': selectedProduct.userId,
+        'locationLatitude': location.latitude,
+        'locationLongitude': location.longitude,
+      };
+      await productsApi.updateProduct(updateData, selectedProduct.id);
+      final updatedProduct = Product(
+        id: selectedProduct.id,
+        title: title,
+        description: description,
+        image: imageUrl,
+        imagePath: imagePath,
+        price: price,
+        userEmail: selectedProduct.userEmail,
+        userId: selectedProduct.userId,
+        location: location,
+      );
+      _products[selectedProductIndex] = updatedProduct;
+      notifyListeners();
+    } catch (e) {}
   }
 
   Future<void> deleteProduct() async {
-    await productsApi.deleteProduct(selectedProduct.id);
-    _products.removeAt(selectedProductIndex);
-    notifyListeners();
+    try {
+      await productsApi.deleteProduct(selectedProduct.id);
+      _products.removeAt(selectedProductIndex);
+      notifyListeners();
+    } catch (e) {}
   }
 
   void selectProduct(String productId) {

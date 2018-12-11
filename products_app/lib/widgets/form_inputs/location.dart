@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
@@ -25,11 +26,6 @@ class _LocationInputState extends State<LocationInput> {
   Location _location = Location();
   String _locationPermissionError;
   GoogleMapController _mapController;
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   _getLocation() async {
     Map<String, double> location;
@@ -68,6 +64,8 @@ class _LocationInputState extends State<LocationInput> {
   }
 
   void _onMapCreated(GoogleMapController controller) async {
+    await PermissionHandler()
+        .requestPermissions([PermissionGroup.locationWhenInUse]);
     setState(() {
       _mapController = controller;
     });

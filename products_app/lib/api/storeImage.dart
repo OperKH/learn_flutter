@@ -12,7 +12,7 @@ Future<Response> storeImage(File file, [String imagePath]) {
   if (imagePath != null) {
     formData.add('formData', imagePath);
   }
-  return client.post(
+  return api.client.post(
     'https://us-central1-flutter-products-552d4.cloudfunctions.net/storeImage',
     data: formData,
     options: Options(

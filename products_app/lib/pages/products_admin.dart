@@ -26,6 +26,23 @@ class ProductsAdminPage extends StatelessWidget {
     );
   }
 
+  Widget _buildTab({
+    @required Icon icon,
+    @required String text,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          icon,
+          SizedBox(width: 8.0),
+          Text(text),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -36,14 +53,8 @@ class ProductsAdminPage extends StatelessWidget {
           title: Text('Manage Products'),
           bottom: TabBar(
             tabs: <Widget>[
-              Tab(
-                icon: Icon(Icons.create),
-                text: 'Create Product',
-              ),
-              Tab(
-                icon: Icon(Icons.list),
-                text: 'My Products',
-              ),
+              _buildTab(icon: Icon(Icons.create), text: 'Create Product'),
+              _buildTab(icon: Icon(Icons.list), text: 'My Products'),
             ],
           ),
         ),
