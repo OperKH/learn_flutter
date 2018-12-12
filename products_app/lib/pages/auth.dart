@@ -12,7 +12,7 @@ class AuthPage extends StatefulWidget {
   }
 }
 
-class _AuthPageState extends State<AuthPage> {
+class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   final Map<String, dynamic> _formData = {
     'email': null,
     'password': null,
@@ -23,6 +23,26 @@ class _AuthPageState extends State<AuthPage> {
       TextEditingController();
   AuthMode _authMode = AuthMode.Login;
   bool isAuthorizing = false;
+  AnimationController _animationController;
+  Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 200),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(0.0, -1.0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.fastOutSlowIn,
+      ),
+    );
+    super.initState();
+  }
 
   DecorationImage _buildBackgroundImage() {
     return DecorationImage(
@@ -78,47 +98,69 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   Widget _buildPasswordConfirmTextField() {
-    return _authMode == AuthMode.Login
-        ? Container()
-        : Container(
-            margin: EdgeInsets.only(top: 10.0),
-            child: TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Confirm Password',
-                filled: true,
-                fillColor: Colors.white,
-              ),
-              obscureText: true,
-              validator: (String value) {
-                if (value != _passwordTextFieldController.text) {
-                  return 'Passwords don\'t match';
-                }
-              },
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Container(
+          margin: EdgeInsets.only(top: 10.0),
+          child: TextFormField(
+            decoration: InputDecoration(
+              labelText: 'Confirm Password',
+              filled: true,
+              fillColor: Colors.white,
             ),
-          );
+            obscureText: true,
+            validator: (String value) {
+              if (_authMode == AuthMode.Signup &&
+                  value != _passwordTextFieldController.text) {
+                return 'Passwords don\'t match';
+              }
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildAcceptSwitch() {
-    return _authMode == AuthMode.Login
-        ? Container()
-        : SwitchListTile(
-            value: _formData['acceptTerms'],
-            onChanged: (bool value) {
-              setState(() {
-                _formData['acceptTerms'] = value;
-              });
-            },
-            title: Text('Accept Terms'),
-          );
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: SwitchListTile(
+          value: _formData['acceptTerms'],
+          onChanged: (bool value) {
+            setState(() {
+              _formData['acceptTerms'] = value;
+            });
+          },
+          title: Text('Accept Terms'),
+        ),
+      ),
+    );
   }
 
   Widget _buildSwitchModeBtn() {
     return FlatButton(
       onPressed: () {
-        setState(() {
-          _authMode =
-              _authMode == AuthMode.Login ? AuthMode.Signup : AuthMode.Login;
-        });
+        if (_authMode == AuthMode.Login) {
+          setState(() {
+            _authMode = AuthMode.Signup;
+          });
+          _animationController.forward();
+        } else {
+          setState(() {
+            _authMode = AuthMode.Login;
+          });
+          _animationController.reverse();
+        }
       },
       child:
           Text('Switch to ${_authMode == AuthMode.Login ? 'Signup' : 'Login'}'),

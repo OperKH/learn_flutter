@@ -6,6 +6,7 @@ import './pages/product.dart';
 import './pages/products.dart';
 import './pages/products_admin.dart';
 import './scoped-models/main.dart';
+import './widgets/helpers/custom_route.dart';
 
 void main() => runApp(MyApp());
 
@@ -59,7 +60,7 @@ class _MyAppState extends State<MyApp> {
           switch (pathElements[1]) {
             case 'product':
               final String productId = pathElements[2];
-              return MaterialPageRoute<bool>(
+              return CustomRoute<bool>(
                 builder: (BuildContext context) =>
                     !_isAuthenticated ? AuthPage() : ProductPage(productId),
               );

@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../widgets/products/title_price_row.dart';
 import '../widgets/products/address_tag.dart';
+import '../widgets/products/product_fab.dart';
 import '../models/product.dart';
 import '../scoped-models/main.dart';
 
@@ -52,40 +53,52 @@ class ProductPage extends StatelessWidget {
           final Product product =
               model.products.firstWhere((product) => product.id == productId);
           return Scaffold(
-            appBar: AppBar(
-              title: Text(product.title),
-            ),
-            body: ListView(
-              children: <Widget>[
-                CachedNetworkImage(
-                  imageUrl: product.image,
-                  height: 300.0,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: Container(
-                    height: 300.0,
-                    child: Center(
-                      child: CircularProgressIndicator(),
+            floatingActionButton: ProductFab(product),
+            body: CustomScrollView(
+              slivers: <Widget>[
+                SliverAppBar(
+                  expandedHeight: 256.0,
+                  pinned: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: Text(product.title),
+                    background: Hero(
+                      tag: product.id,
+                      child: CachedNetworkImage(
+                        imageUrl: product.image,
+                        height: 300.0,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        placeholder: Container(
+                          height: 300.0,
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        errorWidget: Icon(Icons.error),
+                      ),
                     ),
                   ),
-                  errorWidget: Icon(Icons.error),
                 ),
-                TitlePriceRow(product),
-                Center(
-                  child: Text(
-                    product.description,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(height: 6.0),
-                _buildMap(product),
-                SizedBox(height: 6.0),
-                Center(
-                  child: AddressTag(
-                    '${product.location.latitude}, ${product.location.longitude}',
-                  ),
-                ),
-                SizedBox(height: 6.0),
+                SliverList(
+                  delegate: SliverChildListDelegate([
+                    TitlePriceRow(product),
+                    Center(
+                      child: Text(
+                        product.description,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    SizedBox(height: 6.0),
+                    _buildMap(product),
+                    SizedBox(height: 6.0),
+                    Center(
+                      child: AddressTag(
+                        '${product.location.latitude}, ${product.location.longitude}',
+                      ),
+                    ),
+                    SizedBox(height: 6.0),
+                  ]),
+                )
               ],
             ),
           );
