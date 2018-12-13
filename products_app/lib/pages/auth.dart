@@ -4,6 +4,8 @@ import 'package:dio/dio.dart' show DioError;
 
 import '../scoped-models/main.dart';
 import '../models/auth.dart';
+import '../widgets/platform/platform_progress_indicator.dart';
+import '../widgets/platform/platform_elevation.dart';
 
 class AuthPage extends StatefulWidget {
   @override
@@ -171,7 +173,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
     return ScopedModelDescendant<MainModel>(
       builder: (BuildContext context, Widget child, MainModel model) {
         return isAuthorizing
-            ? CircularProgressIndicator()
+            ? PlatformProgressIndicator()
             : RaisedButton(
                 textColor: Colors.white,
                 child:
@@ -251,6 +253,7 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
 
     return Scaffold(
       appBar: AppBar(
+        elevation: getPlatformThemeData(context),
         title: Text('Login'),
       ),
       body: Container(

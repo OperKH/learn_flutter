@@ -4,6 +4,7 @@ import 'package:scoped_model/scoped_model.dart';
 
 import './product_edit.dart';
 import '../scoped-models/main.dart';
+import '../widgets/platform/platform_progress_indicator.dart';
 
 class ProductListPage extends StatefulWidget {
   @override
@@ -45,7 +46,7 @@ class _ProductListPageState extends State<ProductListPage> {
         final products = model.products;
         if (products == null) {
           return Center(
-            child: CircularProgressIndicator(),
+            child: PlatformProgressIndicator(),
           );
         }
         if (products.length == 0) {

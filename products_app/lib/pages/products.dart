@@ -3,6 +3,7 @@ import 'package:scoped_model/scoped_model.dart';
 
 import '../widgets/products/products.dart';
 import '../widgets/ui_elements/logout_list_tile.dart';
+import '../widgets/platform/platform_elevation.dart';
 import '../scoped-models/main.dart';
 
 class ProductsPage extends StatefulWidget {
@@ -25,6 +26,7 @@ class _ProductsPageState extends State<ProductsPage> {
       child: Column(
         children: <Widget>[
           AppBar(
+            elevation: getPlatformThemeData(context),
             automaticallyImplyLeading: false,
             title: Text('Choose'),
           ),
@@ -45,6 +47,7 @@ class _ProductsPageState extends State<ProductsPage> {
     return Scaffold(
       drawer: _buildDrawer(context),
       appBar: AppBar(
+        elevation: getPlatformThemeData(context),
         title: Text('EasyList'),
         actions: <Widget>[
           ScopedModelDescendant<MainModel>(

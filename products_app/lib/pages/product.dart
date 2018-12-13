@@ -8,6 +8,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../widgets/products/title_price_row.dart';
 import '../widgets/products/address_tag.dart';
 import '../widgets/products/product_fab.dart';
+import '../widgets/platform/platform_progress_indicator.dart';
+import '../widgets/platform/platform_elevation.dart';
 import '../models/product.dart';
 import '../scoped-models/main.dart';
 
@@ -57,6 +59,7 @@ class ProductPage extends StatelessWidget {
             body: CustomScrollView(
               slivers: <Widget>[
                 SliverAppBar(
+                  elevation: getPlatformThemeData(context),
                   expandedHeight: 256.0,
                   pinned: true,
                   flexibleSpace: FlexibleSpaceBar(
@@ -71,7 +74,7 @@ class ProductPage extends StatelessWidget {
                         placeholder: Container(
                           height: 300.0,
                           child: Center(
-                            child: CircularProgressIndicator(),
+                            child: PlatformProgressIndicator(),
                           ),
                         ),
                         errorWidget: Icon(Icons.error),

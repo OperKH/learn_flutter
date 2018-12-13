@@ -7,6 +7,7 @@ import './pages/products.dart';
 import './pages/products_admin.dart';
 import './scoped-models/main.dart';
 import './widgets/helpers/custom_route.dart';
+import './widgets/platform/platform_theme.dart';
 
 void main() => runApp(MyApp());
 
@@ -35,11 +36,7 @@ class _MyAppState extends State<MyApp> {
     return ScopedModel<MainModel>(
       model: mainModel,
       child: MaterialApp(
-        theme: ThemeData(
-          primarySwatch: Colors.deepOrange,
-          accentColor: Colors.deepPurple,
-          buttonColor: Colors.red,
-        ),
+        theme: getPlatformThemeData(context),
         // home: AuthenticatePage(),
         routes: {
           '/': (BuildContext context) =>

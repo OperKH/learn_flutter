@@ -4,6 +4,7 @@ import './product_edit.dart';
 import './product_list.dart';
 
 import '../widgets/ui_elements/logout_list_tile.dart';
+import '../widgets/platform/platform_elevation.dart';
 
 class ProductsAdminPage extends StatelessWidget {
   Widget _buildDrawer(BuildContext context) {
@@ -11,6 +12,7 @@ class ProductsAdminPage extends StatelessWidget {
       child: Column(
         children: <Widget>[
           AppBar(
+            elevation: getPlatformThemeData(context),
             automaticallyImplyLeading: false,
             title: Text('Choose'),
           ),
@@ -50,6 +52,7 @@ class ProductsAdminPage extends StatelessWidget {
       child: Scaffold(
         drawer: _buildDrawer(context),
         appBar: AppBar(
+          elevation: getPlatformThemeData(context),
           title: Text('Manage Products'),
           bottom: TabBar(
             tabs: <Widget>[

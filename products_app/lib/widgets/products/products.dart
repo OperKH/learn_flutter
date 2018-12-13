@@ -3,6 +3,7 @@ import 'package:scoped_model/scoped_model.dart';
 
 import './product_card.dart';
 import '../../scoped-models/main.dart';
+import '../../widgets/platform/platform_progress_indicator.dart';
 
 class Products extends StatelessWidget {
   Widget _buildProductList() {
@@ -11,7 +12,7 @@ class Products extends StatelessWidget {
         Widget content;
         if (model.products == null) {
           content = Center(
-            child: CircularProgressIndicator(),
+            child: PlatformProgressIndicator(),
           );
         } else if (model.products.length == 0) {
           content = Container(

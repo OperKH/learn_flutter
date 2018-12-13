@@ -8,6 +8,8 @@ import '../models/locationCoordinates.dart';
 import '../scoped-models/main.dart';
 import '../widgets/form_inputs/location.dart';
 import '../widgets/form_inputs/image.dart';
+import '../widgets/platform/platform_progress_indicator.dart';
+import '../widgets/platform/platform_elevation.dart';
 
 class ProductEditPage extends StatefulWidget {
   @override
@@ -81,9 +83,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
     return ScopedModelDescendant<MainModel>(
       builder: (BuildContext context, Widget child, MainModel model) {
         return _isSaving
-            ? Center(
-                child: CircularProgressIndicator(),
-              )
+            ? Center(child: PlatformProgressIndicator())
             : RaisedButton(
                 child: Text('Save'),
                 textColor: Colors.white,
@@ -183,6 +183,7 @@ class _ProductEditPageState extends State<ProductEditPage> {
             ? pageContent
             : Scaffold(
                 appBar: AppBar(
+                  elevation: getPlatformThemeData(context),
                   title: Text('Edit product'),
                 ),
                 body: pageContent,

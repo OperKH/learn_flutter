@@ -6,6 +6,7 @@ import './title_price_row.dart';
 import './address_tag.dart';
 import '../../models/product.dart';
 import '../../scoped-models/main.dart';
+import '../../widgets/platform/platform_progress_indicator.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -57,7 +58,7 @@ class ProductCard extends StatelessWidget {
               placeholder: Container(
                 height: 300.0,
                 child: Center(
-                  child: CircularProgressIndicator(),
+                  child: PlatformProgressIndicator(),
                 ),
               ),
               errorWidget: Icon(Icons.error),
