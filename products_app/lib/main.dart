@@ -36,6 +36,7 @@ class _MyAppState extends State<MyApp> {
     return ScopedModel<MainModel>(
       model: mainModel,
       child: MaterialApp(
+        title: 'Easy List',
         theme: getPlatformThemeData(context),
         // home: AuthenticatePage(),
         routes: {

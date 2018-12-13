@@ -1,4 +1,4 @@
-# app_products
+# Easy List
 
 A new Flutter project.
 

@@ -14,7 +14,7 @@
          FlutterApplication and put your custom class here. -->
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="app_products"
+        android:label="Easy List"
         android:icon="@mipmap/ic_launcher">
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyBfxvMHaOou79Vj7zEV8RrYWzcY7SspNIQ"/>
         <activity

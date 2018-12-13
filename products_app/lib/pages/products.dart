@@ -48,7 +48,7 @@ class _ProductsPageState extends State<ProductsPage> {
       drawer: _buildDrawer(context),
       appBar: AppBar(
         elevation: getPlatformThemeData(context),
-        title: Text('EasyList'),
+        title: Text('Easy List'),
         actions: <Widget>[
           ScopedModelDescendant<MainModel>(
             builder: (BuildContext context, Widget child, MainModel model) {
