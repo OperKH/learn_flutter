@@ -83,6 +83,7 @@ mixin UserModel on ConnectedProductsModel {
     print('Logout');
     _authenticatedUser = null;
     _authTimer?.cancel();
+    _selectedProductId = null;
     await Future.wait([
       _secureStorage.delete(key: 'userToken'),
       _secureStorage.delete(key: 'userId'),

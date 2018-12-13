@@ -82,6 +82,7 @@ class ProductPage extends StatelessWidget {
                 SliverList(
                   delegate: SliverChildListDelegate([
                     TitlePriceRow(product),
+                    SizedBox(height: 6.0),
                     Center(
                       child: Text(
                         product.description,

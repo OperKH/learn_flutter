@@ -12,11 +12,14 @@ class TitlePriceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 0.0),
+      padding: EdgeInsets.all(10.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          TitleDefault(product.title),
+          Flexible(
+            fit: FlexFit.loose,
+            child: TitleDefault(product.title),
+          ),
           SizedBox(width: 8),
           PriceTag(product.price.toString()),
         ],

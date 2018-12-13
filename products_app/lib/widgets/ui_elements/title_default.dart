@@ -9,6 +9,8 @@ class TitleDefault extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
+      softWrap: true,
+      textAlign: TextAlign.center,
       style: TextStyle(
         fontSize: 26,
         fontWeight: FontWeight.bold,
