@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:dio/dio.dart' show DioError;
+import 'package:local_auth/local_auth.dart';
 
 import '../scoped-models/main.dart';
 import '../models/auth.dart';
@@ -23,10 +24,13 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _passwordTextFieldController =
       TextEditingController();
+  final LocalAuthentication localAuth = LocalAuthentication();
   AuthMode _authMode = AuthMode.Login;
   bool isAuthorizing = false;
   AnimationController _animationController;
   Animation<Offset> _slideAnimation;
+  bool _canAuthenticateByCredentials = false;
+  bool _canCheckBiometrics = false;
 
   @override
   void initState() {
@@ -43,7 +47,47 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
         curve: Curves.fastOutSlowIn,
       ),
     );
+    _initBiometricLogin();
     super.initState();
+  }
+
+  Future<void> _initBiometricLogin() async {
+    bool canCheckBiometrics = false;
+    bool canAuthenticateByCredentials = false;
+    try {
+      canCheckBiometrics = await localAuth.canCheckBiometrics;
+      canAuthenticateByCredentials =
+          await mainModel.canAuthenticateByCredentials;
+    } catch (e) {
+      print(e);
+    }
+    if (!mounted) return;
+    setState(() {
+      _canAuthenticateByCredentials = canAuthenticateByCredentials;
+      _canCheckBiometrics = canCheckBiometrics;
+    });
+    if (canAuthenticateByCredentials && canCheckBiometrics) {
+      await _loginByBiometric();
+    }
+  }
+
+  Future<void> _loginByBiometric() async {
+    try {
+      final authenticated = await localAuth.authenticateWithBiometrics(
+        localizedReason: 'Login',
+        useErrorDialogs: true,
+        stickyAuth: true,
+      );
+      if (authenticated) {
+        setState(() {
+          isAuthorizing = true;
+        });
+        await mainModel.autoAuthenticateFromSecureStorage();
+        setState(() {
+          isAuthorizing = false;
+        });
+      }
+    } catch (e) {}
   }
 
   DecorationImage _buildBackgroundImage() {
@@ -79,22 +123,42 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   Widget _buildPasswordTextField() {
     return Container(
       margin: EdgeInsets.only(top: 10.0),
-      child: TextFormField(
-        decoration: InputDecoration(
-          labelText: 'Password',
-          filled: true,
-          fillColor: Colors.white,
-        ),
-        obscureText: true,
-        controller: _passwordTextFieldController,
-        validator: (String value) {
-          if (value.isEmpty || value.length < 6) {
-            return 'Password invalid';
-          }
-        },
-        onSaved: (String value) {
-          _formData['password'] = value;
-        },
+      child: Stack(
+        alignment: AlignmentDirectional.centerStart,
+        children: <Widget>[
+          TextFormField(
+            decoration: InputDecoration(
+              labelText: 'Password',
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            obscureText: true,
+            controller: _passwordTextFieldController,
+            validator: (String value) {
+              if (value.isEmpty || value.length < 6) {
+                return 'Password invalid';
+              }
+            },
+            onSaved: (String value) {
+              _formData['password'] = value;
+            },
+          ),
+          Positioned(
+            right: 0.0,
+            child: (_canAuthenticateByCredentials && _canCheckBiometrics)
+                ? GestureDetector(
+                    onTap: _loginByBiometric,
+                    child: Container(
+                      padding: EdgeInsets.all(16.0),
+                      child: Icon(
+                        Icons.fingerprint,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                  )
+                : Container(),
+          ),
+        ],
       ),
     );
   }

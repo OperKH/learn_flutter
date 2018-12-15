@@ -87,8 +87,6 @@ mixin UserModel on ConnectedProductsModel {
     await Future.wait([
       _secureStorage.delete(key: 'userToken'),
       _secureStorage.delete(key: 'userId'),
-      _secureStorage.delete(key: 'userEmail'),
-      _secureStorage.delete(key: 'userPassword'),
       _secureStorage.delete(key: 'expiryTime'),
     ]);
     _userSubject.add(false);
@@ -123,6 +121,18 @@ mixin UserModel on ConnectedProductsModel {
     setAuthTimoute(expireIn);
 
     notifyListeners();
+  }
+
+  Future<bool> get canAuthenticateByCredentials async {
+    final String password = await _secureStorage.read(key: 'userPassword');
+    return password != null;
+  }
+
+  Future<void> autoAuthenticateFromSecureStorage() async {
+    final String password = await _secureStorage.read(key: 'userPassword');
+    if (password == null) return null;
+    final String email = await _secureStorage.read(key: 'userEmail');
+    await authenticate(email, password);
   }
 
   void setAuthTimoute(int time) {
